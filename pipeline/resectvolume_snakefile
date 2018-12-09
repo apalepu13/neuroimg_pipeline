@@ -242,16 +242,18 @@ rule normalize_image:
     input:
         POSTMRI_NIFTI_IMG_MGZ = os.path.join(RESECTION_VOLUME_DIR,
                                              "postT1.mgz"),
-        PREMRI_NIFTI_IMG_MGZ = os.path.join(RESECTION_VOLUME_DIR,
-                                            "preT1.mgz"),
+        PREMRI_NIFTI_IMG_MGZ = os.path.join(PATIENT_OUTPUT_DIR,
+                                            "T1.mgz"),
     output:
         POSTMRI_IMG_MGZ_norm = os.path.join(RESECTION_VOLUME_DIR,
                                              "postT1_normalize.mgz"),
         PREMRI_IMG_MGZ_norm = os.path.join(RESECTION_VOLUME_DIR,
                                             "preT1_normalize.mgz"),
     shell:
-        "mri_normalize -conform {input.PREMRI_NIFTI_IMG_MGZ} {output.PREMRI_IMG_MGZ_norm};"
-        "mri_normalize -conform {input.POSTMRI_NIFTI_IMG_MGZ} {output.POSTMRI_IMG_MGZ_norm};"
+        # "mri_normalize -conform {input.PREMRI_NIFTI_IMG_MGZ} {output.PREMRI_IMG_MGZ_norm};"
+        "cp {input.PREMRI_NIFTI_IMG_MGZ} {output.PREMRI_IMG_MGZ_norm};"
+        "mri_normalize {input.POSTMRI_NIFTI_IMG_MGZ} {output.POSTMRI_IMG_MGZ_norm};"
+        "mri_convert -c {output.POSTMRI_IMG_MGZ_norm} {output.POSTMRI_IMG_MGZ_norm};"
 
 
 """
@@ -339,6 +341,13 @@ rule robust_registration_post_to_pre:
                             --satit \
                             --iscale;"
 
+
+rule clean:
+    params:
+        resectiondir = expand(RESECTION_VOLUME_DIR,
+                        patient_id=config['patients']),
+    shell:
+        "rm {params.resectiondir}/*normalize.mgz;"
 
 """
 Rule for converting labels in one volume to another labeling system.
