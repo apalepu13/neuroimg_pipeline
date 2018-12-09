@@ -250,8 +250,8 @@ rule normalize_image:
         PREMRI_IMG_MGZ_norm = os.path.join(RESECTION_VOLUME_DIR,
                                             "preT1_normalize.mgz"),
     shell:
-        "mri_normalize {input.PREMRI_NIFTI_IMG_MGZ} {output.PREMRI_IMG_MGZ_norm} -conform;"
-        "mri_normalize {input.POSTMRI_NIFTI_IMG_MGZ} {output.POSTMRI_IMG_MGZ_norm} -conform;"
+        "mri_normalize -conform {input.PREMRI_NIFTI_IMG_MGZ} {output.PREMRI_IMG_MGZ_norm};"
+        "mri_normalize -conform {input.POSTMRI_NIFTI_IMG_MGZ} {output.POSTMRI_IMG_MGZ_norm};"
 
 
 """
