@@ -79,6 +79,8 @@ HOME_DIR = "../../"
 SCRIPTS_UTIL_DIR = "../../edp/format/neuroimaging"
 ATLAS = ['dk']
 
+
+
 parc = "aparc.a2009s"
 aa = "aparc+aseg"
 sval = "pial"
@@ -183,43 +185,42 @@ assumes the right coordinate system.
 
 Reference: https://www.slicer.org/wiki/Coordinate_systems
 """
-rule
-convert_coordinate_system_raw:
-input:
-raw_ct_file = os.path.join(config['finaloutput_datadir'],
-                           "{patient_id}",
-                           "CT.nii.gz"),
-raw_mri_file = os.path.join(config['finaloutput_datadir'],
-                            "{patient_id}",
-                            "T1.nii.gz"),
-talairach_transform_file = os.path.join(config['finaloutput_datadir'],
-                                        "{patient_id}",
-                                        "transforms/talairach.xfm"),
-output:
-ras_mri_volume = os.path.join(config['finaloutput_datadir'],
-                              "{patient_id}",
-                              "converted_coord_system",
-                              "T1.RAS.nii.gz"),
-tal_mri_volume = os.path.join(config['finaloutput_datadir'],
-                              "{patient_id}",
-                              "converted_coord_system",
-                              "T1.TAL.nii.gz"),
-ras_ct_volume = os.path.join(config['finaloutput_datadir'],
-                             "{patient_id}",
-                             "converted_coord_system",
-                             "CT.RAS.nii.gz"),
-tal_ct_volume = os.path.join(config['finaloutput_datadir'],
-                             "{patient_id}",
-                             "converted_coord_system",
-                             "CT.TAL.nii.gz"),
+rule convert_coordinate_system_raw:
+    input:
+        raw_ct_file = os.path.join(config['finaloutput_datadir'],
+                                   "{patient_id}",
+                                   "CT.nii.gz"),
+        raw_mri_file = os.path.join(config['finaloutput_datadir'],
+                                    "{patient_id}",
+                                    "T1.nii.gz"),
+        talairach_transform_file = os.path.join(config['finaloutput_datadir'],
+                                                "{patient_id}",
+                                                "transforms/talairach.xfm"),
+    output:
+        ras_mri_volume = os.path.join(config['finaloutput_datadir'],
+                                      "{patient_id}",
+                                      "converted_coord_system",
+                                      "T1.RAS.nii.gz"),
+        tal_mri_volume = os.path.join(config['finaloutput_datadir'],
+                                      "{patient_id}",
+                                      "converted_coord_system",
+                                      "T1.TAL.nii.gz"),
+        ras_ct_volume = os.path.join(config['finaloutput_datadir'],
+                                     "{patient_id}",
+                                     "converted_coord_system",
+                                     "CT.RAS.nii.gz"),
+        tal_ct_volume = os.path.join(config['finaloutput_datadir'],
+                                     "{patient_id}",
+                                     "converted_coord_system",
+                                     "CT.TAL.nii.gz"),
 
-shell:
-# convert mri and ct volumes to RAS and TAL
-"echo 'Running on original images!';"
-"mri_convert -rt nearest --out_orientation RAS {input.raw_ct_file} {output.ras_ct_volume};"
-"mri_convert -rt nearest --out_orientation RAS {input.raw_mri_file} {output.ras_mri_volume};"
-"mri_convert {input.raw_ct_file} --apply_transform {input.talairach_transform_file} -oc 0 0 0 {output.tal_ct_volume};"
-"mri_convert {input.raw_mri_file} --apply_transform {input.talairach_transform_file} -oc 0 0 0 {output.tal_mri_volume};"
+    shell:
+    # convert mri and ct volumes to RAS and TAL
+    "echo 'Running on original images!';"
+    "mri_convert -rt nearest --out_orientation RAS {input.raw_ct_file} {output.ras_ct_volume};"
+    "mri_convert -rt nearest --out_orientation RAS {input.raw_mri_file} {output.ras_mri_volume};"
+    "mri_convert {input.raw_ct_file} --apply_transform {input.talairach_transform_file} -oc 0 0 0 {output.tal_ct_volume};"
+    "mri_convert {input.raw_mri_file} --apply_transform {input.talairach_transform_file} -oc 0 0 0 {output.tal_mri_volume};"
 
 
 """

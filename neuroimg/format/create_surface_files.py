@@ -2,6 +2,7 @@ import os
 import os.path
 import sys
 import time
+import argparse
 
 import numpy as np
 
@@ -112,7 +113,19 @@ def create_surface_main(cort_surf_direc: os.PathLike,
 
 
 if __name__ == '__main__':
-    subject_dir, source_lut, target_lut, struct_zip_file, out_surfaces_dir = sys.argv[1:]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('subject_dir', help="The result directory of the dataset")
+    parser.add_argument('source_lut', help="Figure directory to save resulting figures.")
+    parser.add_argument('target_lut', help="The output model computed filename.")
+    parser.add_argument('struct_zip_file', help="The output meta data filename")
+    parser.add_argument('out_surfaces_dir', help='The output path for the figure name to be saved.')
+    args = parser.parse_args()
+    # extract arguments from parser
+    subject_dir = args.subject_dir
+    source_lut = args.source_lut
+    target_lut = args.target_lut
+    struct_zip_file = args.struct_zip_file
+    out_surfaces_dir = args.out_surfaces_dir
 
     # directories to the cortical and subcortical data
     cort_surf_direc = os.path.join(subject_dir, "surf")

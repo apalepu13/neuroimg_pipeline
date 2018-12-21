@@ -1,0 +1,18 @@
+"""
+Rule to plot:
+- parcellated nodes in space with the surface shown transparently
+- surface shown transparent with different regions colored
+- parcellated nodes in space with the contacts.xyz (centers) plotted
+"""
+rule plot_results:
+    input:
+        output_file=expand(os.path.join(
+                        config['fs_outputdatadir'],
+                        config['finaloutput_datadir'],
+                        "{patient_id}",
+                        "tvb/connectivity.zip"), patient_id=config['patients']),
+    output:
+        node_figure =
+        surface_figure =
+        channels_figure =
+    shell:
