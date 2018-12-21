@@ -661,7 +661,7 @@ rule convert_to_anatomical_space:
         "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
                             --tval {output.lhpial} --tval-xyz --hemi lh --s subjectname;"
         "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
-                    --tval {output.rhpial} --tval-xyz --hemi rh --s subjectname;"
+                    --tval {output.rhpial} --tval-xyz {output.rhpial} --hemi rh --s subjectname;"
 
 """
 Rule to copy all necessary reconstruction files to a temporary directory,
