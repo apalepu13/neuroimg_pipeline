@@ -69,17 +69,15 @@ Runs tests to ensure data is all in the corresponding format:
 If this doesn't work off the bat, make sure you explicitly set SUBJECTS_DIR
 """
 
-configfile: "config.yaml"
+configfile: "../config/config.yaml"
 snakemake.utils.validate(config, "../config/preformat_config.schema.yaml")
 
 # get the environment variable for freesurfer - for use in getting access to lut's
 FREESURFER_HOME = os.getenv("FREESURFER_HOME") or ''
 MRTRIX3_HOME = os.getenv("MRTRIX3_HOME") or ''
-HOME_DIR = "../../"
-SCRIPTS_UTIL_DIR = "../../edp/format/neuroimaging"
+HOME_DIR = "../../../"
+SCRIPTS_UTIL_DIR = "../../../neuroimg/format/"
 ATLAS = ['dk']
-
-
 
 parc = "aparc.a2009s"
 aa = "aparc+aseg"
