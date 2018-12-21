@@ -658,7 +658,7 @@ rule convert_to_anatomical_space:
                                 --o {output.aparc_dkatlas_aseg_file} --regheader {input.aparc_dkatlas_aseg_file};"
 
         # convert surfaces to the native space
-        "mri_surf2surf --sval-xyz pial --reg register.native.dat {input.rawavg_file} \
+        "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
                             --tval {output.lhpial} --tval-xyz --hemi lh --s subjectname;"
         "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
                     --tval {output.rhpial} --tval-xyz --hemi rh --s subjectname;"

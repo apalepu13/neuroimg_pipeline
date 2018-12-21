@@ -26,7 +26,7 @@ rawdatafilepath = fullfile(RECORD_DATADIR, 'cleveland/', subjID, '/seeg/edf/', s
 subjID = 'la03';
 
 % results directory
-SUBJDIR = fullfile(RESULTS_DIR, subjID);
+SUBJDIR = fullfile(RbESULTS_DIR, subjID);
 
 % output filepath for your electrode localization
 elec_coords_filepath = [subjID '_elec_f.mat'];
