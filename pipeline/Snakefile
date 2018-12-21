@@ -643,6 +643,12 @@ rule convert_to_anatomical_space:
         rhpial = os.path.join(PATIENT_OUTPUT_DIR,
                               "rh_native.pial"),
     shell:
+            # convert surfaces to the native space
+        "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
+                            --tval {output.lhpial} --tval-xyz {output.lhpial} --hemi lh --s subjectname;"
+        "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
+                    --tval {output.rhpial} --tval-xyz {output.rhpial} --hemi rh --s subjectname;"
+
         # convert volume to its previous volume, e.g. brian mask
         "mri_vol2vol --mov {input.brainmask_file} --targ {input.rawavg_file} \
                         --regheader --o {output.brainmask_file} --no-save-reg;"
@@ -657,11 +663,7 @@ rule convert_to_anatomical_space:
         "mri_label2vol --seg {input.aparc_dkatlas_aseg_file} --temp {input.rawavg_file} \
                                 --o {output.aparc_dkatlas_aseg_file} --regheader {input.aparc_dkatlas_aseg_file};"
 
-        # convert surfaces to the native space
-        "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
-                            --tval {output.lhpial} --tval-xyz --hemi lh --s subjectname;"
-        "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
-                    --tval {output.rhpial} --tval-xyz {output.rhpial} --hemi rh --s subjectname;"
+
 
 """
 Rule to copy all necessary reconstruction files to a temporary directory,
