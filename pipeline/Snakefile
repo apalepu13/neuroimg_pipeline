@@ -141,6 +141,12 @@ rule all:
         LDDMM_MAPPED_FILE=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
                                         "ldmm_ct-to-pre-t1_omat.txt"),
                                     patient_id=config['patients']),
+        brainmask_inct_file = expand(os.path.join(config['finaloutput_datadir'],
+                                                     "{patient_id}",
+                                                     "nativespace-transform",
+                                                     "brainmask_native_inct.mgz"),
+                                    patient_id=config['patients']),
+
     shell:
         "echo 'done'"
 
@@ -378,6 +384,30 @@ rule coregistert1_ct_to_pre:
                             -ref {input.PREMRI_NIFTI_IMG_MGZ} \
                             -omat {output.MAPPING_FILE_ORIG} \
                             -out {output.CT_IN_PRE_NIFTI_IMG_ORIGgz};"
+
+
+"""
+Rule to map the brain mask over to the CT space.
+"""
+rule map_brainmask_to_ct:
+    input:
+        brainmask_file = os.path.join(config['finaloutput_datadir'],
+                                                     "{patient_id}",
+                                                     "nativespace-transform",
+                                                     "brainmask_native.mgz"),
+        CT_NIFTI_IMG = os.path.join(config['finaloutput_datadir'],
+                                                                   "{patient_id}",
+                                                                   "CT.nii.gz"),
+    output:
+        brainmask_inct_file = os.path.join(config['finaloutput_datadir'],
+                                                     "{patient_id}",
+                                                     "nativespace-transform",
+                                                     "brainmask_native_inct.mgz"),
+    shell:
+        "flirt -in {input.brainmask_file} \
+                            -ref {input.CT_NIFTI_IMG_MGZ} \
+                            -out {output.brainmask_inct_file};"
+
 
 """
 Rule for robust registration of two volumes within two volumes

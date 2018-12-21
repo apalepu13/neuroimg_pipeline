@@ -26,11 +26,11 @@ rawdatafilepath = fullfile(RECORD_DATADIR, 'cleveland/', subjID, '/seeg/edf/', s
 subjID = 'la03';
 
 % results directory
-SUBJDIR = fullfile(RbESULTS_DIR, subjID);
+SUBJDIR = fullfile(RESULTS_DIR, subjID);
 
 % output filepath for your electrode localization
 COREGISTRATION_DIR = fullfile(RESULTS_DIR, subjID, 'coregistration')
-elec_coords_filepath = fullfile(COREGISTRATION_DIR, [subjID '_elec_initialize.mat'];
+elec_coords_filepath = fullfile(COREGISTRATION_DIR, [subjID '_elec_initialize.mat']);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CHOOSE EITHER COREGISTERED CT FILE, OR ORIGINAL CT IMAGE FILE.
