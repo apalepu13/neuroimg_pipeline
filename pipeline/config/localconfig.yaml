@@ -1,13 +1,13 @@
 # define directories that we work with
 rawdatadir:
-#  "/home/adam2392/hdd/data/neuroimaging/raw"
- "/Users/adam2392/Dropbox/phd_research/data/neuroimaging_results/raw/"
+  "/home/adam2392/hdd/data/neuroimaging/raw"
+# "/Users/adam2392/Dropbox/phd_research/data/neuroimaging_results/raw/"
 finaloutput_datadir:
-#  "/home/adam2392/hdd/data/neuroimaging/freesurfer_output/outputfiles/"
-  "/Users/adam2392/Dropbox/phd_research/data/neuroimaging_results/freesurfer_output/outputfiles/"
+  "/home/adam2392/hdd/data/neuroimaging/freesurfer_output/outputfiles/"
+#  "/Users/adam2392/Dropbox/phd_research/data/neuroimaging_results/freesurfer_output/outputfiles/"
 fs_outputdatadir:
-# "/home/adam2392/hdd/data/neuroimaging/freesurfer_output/"
- "/Users/adam2392/Dropbox/phd_research/data/neuroimaging_results/freesurfer_output/"
+ "/home/adam2392/hdd/data/neuroimaging/freesurfer_output/"
+# "/Users/adam2392/Dropbox/phd_research/data/neuroimaging_results/freesurfer_output/"
 outputplotsdir:
  "/home/adam2392/hdd/data/neuroimaging/freesurfer_output/figures/"
   # "/Users/adam2392/Downloads/neuroimaging/freesurfer_output/figures/"

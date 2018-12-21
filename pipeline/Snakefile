@@ -126,8 +126,6 @@ rule all:
                                                         "{hemisphere}."+sval+"."+resamp_target),
                                             hemisphere = hemispheres,
                                             patient_id=config['patients']),
-
-
         CT_IN_T1_NIFTI_IMG_ORIG=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
                                                "CT_IN_T1.mgz"),
                                          patient_id=config['patients']),
@@ -251,14 +249,25 @@ rule convert_pial_surface_files:
                             "lh.pial"),
         rhpial=os.path.join(PATIENT_OUTPUT_DIR,
                             "rh.pial"),
+        lhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
+                              "lh_native.pial"),
+        rhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
+                              "rh_native.pial"),
     output:
         lhpial=os.path.join(PATIENT_OUTPUT_DIR,
                             "lh.pial.asc"),
         rhpial=os.path.join(PATIENT_OUTPUT_DIR,
                             "rh.pial.asc"),
+        lhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
+                              "lh_native.asc"),
+        rhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
+                              "rh_native.asc"),
     shell:
         "mris_convert {input.lhpial} {output.lhpial};"
         "mris_convert {input.rhpial} {output.rhpial};"
+        "mris_convert {input.lhpial_native} {output.lhpial_native};"
+        "mris_convert {input.rhpial_native} {output.rhpial_native};"
+
 
 # """
 # Rule for coregistering .nifit images -> .nifti for T1 space
@@ -442,12 +451,12 @@ rule create_structural_dataset:
         "echo 'RUNNING CREATION OF FINAL FILES...'; \
         cd {params.scripts_dir};"
 
-        # "touch {output.output_file};"
-        "python -m create_surface_files {params.subjdir} \
-                                        {params.lut_fs} \
-                                        {params.lut_target} \
-                                        {output.output_file} \
-                                        {params.output_surface_dir};"
+        "touch {output.output_file};"
+        # "python -m create_surface_files {params.subjdir} \
+        #                                 {params.lut_fs} \
+        #                                 {params.lut_target} \
+        #                                 {output.output_file} \
+        #                                 {params.output_surface_dir};"
 
 rule clean_structural_dataset:
     params:
@@ -561,6 +570,98 @@ rule convert_voxel_labeling:
                                             "{output.output_dk_voxel_file} " \
                                             "{output.output_destrieux_voxel_file};"
 
+"""
+Help register images from conformed -> original native space
+
+and also from original native space -> conformed
+"""
+rule register_conformed_to_orig:
+    input:
+        rawavg_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                        "rawavg.mgz"),
+        t1_mgz_file = os.path.join(PATIENT_OUTPUT_DIR,
+                           "T1.mgz"),
+    output:
+        registration_native_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                                "nativespace-transform",
+                                                "register.native.dat"),
+        registration_conformed_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                                "nativespace-transform",
+                                                "register.conformed.dat")
+    shell:
+        "tkregister2 --mov {input.rawavg_file} --targ {input.t1_mgz_file} \
+                --reg {output.registration_native_file} --noedit --regheader;"
+        "tkregister2 --mov {input.t1_mgz_file} --targ {input.rawavg_file} \
+                --reg {output.registration_conformed_file} --noedit --regheader;"
+
+"""
+Helps map back image volumes, brain masks to their native space.
+"""
+rule convert_to_anatomical_space:
+    input:
+        brainmask_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                      "brainmask.mgz"),
+        rawavg_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                        "rawavg.mgz"),
+        aseg_output_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                        "aseg.mgz"),
+        wm_output_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                      "wm.mgz"),
+        aparc_atlas_aseg_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                             "aparc.a2009s+aseg.mgz"),
+        aparc_dkatlas_aseg_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                            "aparc+aseg.mgz"),
+        lhpial = os.path.join(PATIENT_OUTPUT_DIR,
+                              "lh.pial"),
+        rhpial = os.path.join(PATIENT_OUTPUT_DIR,
+                              "rh.pial"),
+        lhlabel = os.path.join(PATIENT_OUTPUT_DIR,
+                               "lh.aparc.annot"),
+        rhlabel = os.path.join(PATIENT_OUTPUT_DIR,
+                               "rh.aparc.annot"),
+        registration_native_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                                "nativespace-transform",
+                                                "register.native.dat")
+    output:
+        brainmask_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                      "nativespace-transform",
+                                      "brainmask_native.mgz"),
+        aseg_output_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                        "nativespace-transform",
+                                        "subcortical_native.mgz"),
+        wm_output_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                      "nativespace-transform",
+                                      "wm_native.mgz"),
+        aparc_atlas_aseg_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                             "nativespace-transform",
+                                             "destrieux_native.mgz"),
+        aparc_dkatlas_aseg_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                               "nativespace-transform",
+                                            "desikan_native.mgz"),
+        lhpial = os.path.join(PATIENT_OUTPUT_DIR,
+                              "lh_native.pial"),
+        rhpial = os.path.join(PATIENT_OUTPUT_DIR,
+                              "rh_native.pial"),
+    shell:
+        # convert volume to its previous volume, e.g. brian mask
+        "mri_vol2vol --mov {input.brainmask_file} --targ {input.rawavg_file} \
+                        --regheader --o {output.brainmask_file} --no-save-reg;"
+
+        # convert label volumes -> native space
+        "mri_label2vol --seg {input.aseg_output_file} --temp {input.rawavg_file} \
+                        --o {output.aseg_output_file} --regheader {input.aseg_output_file};"
+        "mri_label2vol --seg {input.wm_output_file} --temp {input.rawavg_file} \
+                                --o {output.wm_output_file} --regheader {input.wm_output_file};"
+        "mri_label2vol --seg {input.aparc_atlas_aseg_file} --temp {input.rawavg_file} \
+                                --o {output.aparc_atlas_aseg_file} --regheader {input.aparc_atlas_aseg_file};"
+        "mri_label2vol --seg {input.aparc_dkatlas_aseg_file} --temp {input.rawavg_file} \
+                                --o {output.aparc_dkatlas_aseg_file} --regheader {input.aparc_dkatlas_aseg_file};"
+
+        # convert surfaces to the native space
+        "mri_surf2surf --sval-xyz pial --reg register.native.dat {input.rawavg_file} \
+                            --tval {output.lhpial} --tval-xyz --hemi lh --s subjectname;"
+        "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
+                    --tval {output.rhpial} --tval-xyz --hemi rh --s subjectname;"
 
 """
 Rule to copy all necessary reconstruction files to a temporary directory,
@@ -600,6 +701,15 @@ rule copy_reconstruction_files:
         t1_mgz_file = os.path.join(config['fs_outputdatadir'],
                         "{patient_id}",
                         "mri/T1.mgz"),
+        brainmask_file = os.path.join(config['fs_outputdatadir'],
+                                      "{patient_id}",
+                                      "mri/brainmask.mgz"),
+        rawavg_file = os.path.join(config['fs_outputdatadir'],
+                                      "{patient_id}",
+                                      "mri/rawavg.mgz"),
+        wm_output_file = os.path.join(config['fs_outputdatadir'],
+                                      "{patient_id}",
+                                      "mri/wm.mgz"),
         talairach_transform_file = os.path.join(config['fs_outputdatadir'],
                                                 "{patient_id}",
                                                 "mri/transforms/talairach.xfm")
@@ -622,6 +732,12 @@ rule copy_reconstruction_files:
                                             "aparc+aseg.mgz"),
         t1_mgz_file = os.path.join(PATIENT_OUTPUT_DIR,
                                         "T1.mgz"),
+        brainmask_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                      "brainmask.mgz"),
+        wm_output_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                      "wm.mgz"),
+        rawavg_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                   "rawavg.mgz"),
         talairach_transform_file = os.path.join(PATIENT_OUTPUT_DIR,
                                                 "transforms/talairach.xfm")
     shell:
@@ -634,5 +750,9 @@ rule copy_reconstruction_files:
         "cp {params.aparc_atlas_aseg_file} {output.aparc_atlas_aseg_file};"
         "cp {params.aparc_dkatlas_aseg_file} {output.aparc_dkatlas_aseg_file};"
         "cp {params.t1_mgz_file} {output.t1_mgz_file};"
+
+        "cp {params.brainmask_file} {output.brainmask_file};"
+        "cp {params.rawavg_file} {output.rawavg_file};"
+        "cp {params.wm_output_file} {output.wm_output_file};"
 
         "cp {params.talairach_transform_file} {output.talairach_transform_file};"
