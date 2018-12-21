@@ -644,10 +644,10 @@ rule convert_to_anatomical_space:
                               "rh_native.pial"),
     shell:
             # convert surfaces to the native space
-        "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
-                            --tval {output.lhpial} --tval-xyz {output.lhpial} --hemi lh --s subjectname;"
-        "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} {input.rawavg_file} \
-                    --tval {output.rhpial} --tval-xyz {output.rhpial} --hemi rh --s subjectname;"
+        "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file}  \
+                            --tval {output.lhpial} --tval-xyz {input.rawavg_file} --hemi lh --s subjectname;"
+        "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} \
+                    --tval {output.rhpial} --tval-xyz {input.rawavg_file} --hemi rh --s subjectname;"
 
         # convert volume to its previous volume, e.g. brian mask
         "mri_vol2vol --mov {input.brainmask_file} --targ {input.rawavg_file} \
