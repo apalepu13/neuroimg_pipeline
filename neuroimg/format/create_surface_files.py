@@ -1,15 +1,15 @@
+import argparse
 import os
 import os.path
 import sys
 import time
-import argparse
 
 import numpy as np
 
-sys.path.append('../../../')
+sys.path.append('../../')
 
-from neuroimg.base.objects.neuroimaging.neuroimage_object import GetSurface, StructuralDataset
 from neuroimg.base.objects.neuroimaging.baseneuroimage import RegionIndexMapping
+from neuroimg.base.objects.neuroimaging.neuroimage_object import GetSurface, StructuralDataset
 
 '''
 Main creation file

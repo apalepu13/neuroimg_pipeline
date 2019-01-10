@@ -75,7 +75,7 @@ snakemake.utils.validate(config, "./config/preformat_config.schema.yaml")
 FREESURFER_HOME = os.getenv("FREESURFER_HOME") or ''
 MRTRIX3_HOME = os.getenv("MRTRIX3_HOME") or ''
 HOME_DIR="../../"
-SCRIPTS_UTIL_DIR = "../../neuroimg/format/"
+SCRIPTS_UTIL_DIR = "../neuroimg/format/"
 ATLAS=['dk', 'destrieux']
 
 ''' USER DEFINED DIRECTORIES TO STORE FINAL DATA IN ORGANIZED SUBFOLDERS '''
@@ -110,36 +110,38 @@ rule all:
         output_file=expand(os.path.join(TVB_OUTPUT_DIR,
                                         "connectivity_{atlas}.zip"),
                            patient_id=config['patients'], atlas=ATLAS),
+
         # label in source lut volume
-        label_volume_file = expand(os.path.join(config['finaloutput_datadir'],
-                                                "{patient_id}",
-                                                "tvb",
-                                                 "label_in_T1_volume.{atlas}.nii.gz"),
-                                            patient_id=config['patients'], atlas=ATLAS),
-        # annotation subsampled file
-        output_subsampled_annotfile = expand(os.path.join(PATIENT_OUTPUT_DIR,
-                                                        "{hemisphere}."+parc+".annot."+resamp_target),
-                                             hemisphere=hemispheres,
-                                             patient_id=config['patients']),
-        # surface subsampled file
-        output_subsampled_surffile = expand(os.path.join(PATIENT_OUTPUT_DIR,
-                                                        "{hemisphere}."+sval+"."+resamp_target),
-                                            hemisphere = hemispheres,
-                                            patient_id=config['patients']),
-        CT_IN_T1_NIFTI_IMG_ORIG=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                               "CT_IN_T1.mgz"),
-                                         patient_id=config['patients']),
+        # label_volume_file = expand(os.path.join(config['finaloutput_datadir'],
+        #                                         "{patient_id}",
+        #                                         "tvb",
+        #                                          "label_in_T1_volume.{atlas}.nii.gz"),
+        #                                     patient_id=config['patients'], atlas=ATLAS),
+        # # annotation subsampled file
+        # output_subsampled_annotfile = expand(os.path.join(PATIENT_OUTPUT_DIR,
+        #                                                 "{hemisphere}."+parc+".annot."+resamp_target),
+        #                                      hemisphere=hemispheres,
+        #                                      patient_id=config['patients']),
+        # # surface subsampled file
+        # output_subsampled_surffile = expand(os.path.join(PATIENT_OUTPUT_DIR,
+        #                                                 "{hemisphere}."+sval+"."+resamp_target),
+        #                                     hemisphere = hemispheres,
+        #                                     patient_id=config['patients']),
+        # # OUTPUT REGISTRATION FILES FROM FLIRT, ROBUST_REGISTER AND LDMM
+        # OUTPUT_ROBUST_REGISTRATION_FILE = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                 "CT_in_pre_T1_robustregistration.mgz"),
+        #                                  patient_id=config['patients']),
+        # CT_IN_T1_NIFTI_IMG_ORIG=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                        "CT_IN_T1.mgz"),
+        #                                  patient_id=config['patients']),
         # mapping matrix for CT to T1
-        MAPPING_FILE=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                        "fsl_ct-to-t1_omat.txt"),
-                                    patient_id=config['patients']),
-        # OUTPUT REGISTRATION FILES FROM FLIRT, ROBUST_REGISTER AND LDMM
-        OUTPUT_ROBUST_REGISTRATION_FILE = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                        "CT_in_pre_T1_robustregistration.mgz"),
-                                         patient_id=config['patients']),
-        LDDMM_MAPPED_FILE=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                        "ldmm_ct-to-pre-t1_omat.txt"),
-                                    patient_id=config['patients']),
+        # MAPPING_FILE=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                 "fsl_ct-to-t1_omat.txt"),
+        #                             patient_id=config['patients']),
+
+        # LDDMM_MAPPED_FILE=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                 "ldmm_ct-to-pre-t1_omat.txt"),
+        #                             patient_id=config['patients']),
     shell:
         "echo 'done'"
 
@@ -448,15 +450,15 @@ rule create_structural_dataset:
         output_file=os.path.join(TVB_OUTPUT_DIR,
                                 "connectivity_{atlas}.zip")
     shell:
-        "echo 'RUNNING CREATION OF FINAL FILES...'; \
-        cd {params.scripts_dir};"
+        "echo 'RUNNING CREATION OF FINAL FILES...';"
+        "cd {params.scripts_dir};"
 
-        "touch {output.output_file};"
-        # "python -m create_surface_files {params.subjdir} \
-        #                                 {params.lut_fs} \
-        #                                 {params.lut_target} \
-        #                                 {output.output_file} \
-        #                                 {params.output_surface_dir};"
+        # "touch {output.output_file};"
+        "python -m create_surface_files {params.subjdir} \
+                                        {params.lut_fs} \
+                                        {params.lut_target} \
+                                        {output.output_file} \
+                                        {params.output_surface_dir};"
 
 rule clean_structural_dataset:
     params:
