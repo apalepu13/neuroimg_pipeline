@@ -67,9 +67,10 @@ Runs tests to ensure data is all in the corresponding format:
 
 If this doesn't work off the bat, make sure you explicitly set SUBJECTS_DIR
 """
-
 configfile: "./config/localconfig.yaml"
 snakemake.utils.validate(config, "./config/preformat_config.schema.yaml")
+
+# os.putenv('SUBJECTS_DIR', config['fs_outputdatadir']); os.system('bash')"
 
 # get the environment variable for freesurfer - for use in getting access to lut's
 FREESURFER_HOME = os.getenv("FREESURFER_HOME") or ''
@@ -138,10 +139,19 @@ rule all:
         # MAPPING_FILE=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
         #                                 "fsl_ct-to-t1_omat.txt"),
         #                             patient_id=config['patients']),
-
+        # # OUTPUT REGISTRATION FILES FROM FLIRT, ROBUST_REGISTER AND LDMM
+        # OUTPUT_ROBUST_REGISTRATION_FILE = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                 "CT_in_pre_T1_robustregistration.mgz"),
+        #                                  patient_id=config['patients']),
         # LDDMM_MAPPED_FILE=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
         #                                 "ldmm_ct-to-pre-t1_omat.txt"),
         #                             patient_id=config['patients']),
+        # brainmask_inct_file = expand(os.path.join(config['finaloutput_datadir'],
+        #                                              "{patient_id}",
+        #                                              "nativespace-transform",
+        #                                              "brainmask_native_inct.mgz"),
+        #                             patient_id=config['patients']),
+
     shell:
         "echo 'done'"
 
@@ -367,6 +377,7 @@ rule coregistert1_ct_to_pre:
                                             "preT1_normalize.mgz"),
         CT_NIFTI_IMG_MGZ = os.path.join(COREGISTRATION_OUTPUT_DIR,
                                              "CT_normalize.mgz"),
+
     output:
         CT_IN_PRE_NIFTI_IMG_ORIGgz = os.path.join(COREGISTRATION_OUTPUT_DIR,
                                                       "CT_IN_T1.mgz"),
@@ -378,6 +389,30 @@ rule coregistert1_ct_to_pre:
                             -ref {input.PREMRI_NIFTI_IMG_MGZ} \
                             -omat {output.MAPPING_FILE_ORIG} \
                             -out {output.CT_IN_PRE_NIFTI_IMG_ORIGgz};"
+
+
+"""
+Rule to map the brain mask over to the CT space.
+"""
+rule map_brainmask_to_ct:
+    input:
+        brainmask_file = os.path.join(config['finaloutput_datadir'],
+                                                     "{patient_id}",
+                                                     "nativespace-transform",
+                                                     "brainmask_native.mgz"),
+        CT_NIFTI_IMG = os.path.join(config['finaloutput_datadir'],
+                                                                   "{patient_id}",
+                                                                   "CT.nii.gz"),
+    output:
+        brainmask_inct_file = os.path.join(config['finaloutput_datadir'],
+                                                     "{patient_id}",
+                                                     "nativespace-transform",
+                                                     "brainmask_native_inct.mgz"),
+    shell:
+        "flirt -in {input.brainmask_file} \
+                            -ref {input.CT_NIFTI_IMG_MGZ} \
+                            -out {output.brainmask_inct_file};"
+
 
 """
 Rule for robust registration of two volumes within two volumes
@@ -452,7 +487,6 @@ rule create_structural_dataset:
     shell:
         "echo 'RUNNING CREATION OF FINAL FILES...';"
         "cd {params.scripts_dir};"
-
         # "touch {output.output_file};"
         "python -m create_surface_files {params.subjdir} \
                                         {params.lut_fs} \
