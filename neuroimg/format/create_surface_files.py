@@ -9,7 +9,8 @@ import numpy as np
 sys.path.append('../../')
 
 from neuroimg.base.objects.neuroimaging.baseneuroimage import RegionIndexMapping
-from neuroimg.base.objects.neuroimaging.neuroimage_object import GetSurface, StructuralDataset
+from neuroimg.base.objects.neuroimaging.surface_object import GetSurface
+from neuroimg.base.objects.neuroimaging.dataset import StructuralDataset
 
 '''
 Main creation file
@@ -97,7 +98,7 @@ def create_surface_main(cort_surf_direc: os.PathLike,
         surf_cort.remap(remap_dict)
 
     else:
-        # Add the region to weights and tract lengths
+        # extract the names of each region index from target lut
         names = region_index_mapping.trg_table.names
 
     dataset = StructuralDataset(orientations, areas, centers, cortical, names)

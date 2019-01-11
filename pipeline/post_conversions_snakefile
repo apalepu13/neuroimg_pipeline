@@ -34,11 +34,6 @@ rule all:
                                                 "{patient_id}",
                                                 "tvb/connectivity.zip"), patient_id=config['patients']),
         # coregistered CT to T1 image
-        # CT_IN_T1_NIFTI_IMG=expand(os.path.join(config['finaloutput_datadir'],
-        #                                     "{patient_id}",
-        #                                     "coregistration",
-        #                                  "CT_IN_T1.RAS.RO.nii.gz"),
-        #                             patient_id=config['patients']),
         CT_IN_T1_NIFTI_IMG_ORIG = expand(os.path.join(config['finaloutput_datadir'],
                                                "{patient_id}",
                                                "coregistration",
