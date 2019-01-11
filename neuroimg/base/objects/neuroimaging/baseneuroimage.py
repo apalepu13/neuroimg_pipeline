@@ -198,8 +198,8 @@ def read_cortical_region_mapping(label_direc: os.PathLike, hemisphere: Hemispher
     """
     filename = os.path.join(label_direc, hemisphere.value + ".aparc.annot")
     region_mapping, _, _ = nibabel.freesurfer.io.read_annot(filename)
-
-    region_mapping[region_mapping == -1] = 0  # Unknown regions in hemispheres
+    region_mapping = region_mapping - 1
+    region_mapping[region_mapping == -2] = 0  # Unknown regions in hemispheres
 
     # $FREESURFER_HOME/FreeSurferColorLUT.txt describes the shift
     if hemisphere == Hemisphere.lh:
