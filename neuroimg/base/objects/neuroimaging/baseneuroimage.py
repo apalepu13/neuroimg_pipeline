@@ -104,7 +104,7 @@ class ColorLut(object):
     """
 
     def __init__(self, filename: os.PathLike):
-        table = np.genfromtxt(os.fspath(filename), encoding="unicode", dtype=None)
+        table = np.genfromtxt(os.fspath(filename), encoding="latin1", dtype=None)
         if len(table.dtype) == 6:
             # id name R G B A
             self.inds = table[table.dtype.names[0]]
