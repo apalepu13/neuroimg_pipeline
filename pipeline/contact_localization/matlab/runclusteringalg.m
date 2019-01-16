@@ -225,15 +225,15 @@ s_CT = 0:size(Y,3)-1; %
 
 
 
-[C_CT,R_CT,S_CT] = ndgrid(c_CT,r_CT,s_CT) ;
-CRS_CT = [C_CT(:),R_CT(:),S_CT(:)];
-
-ras_CT = CT.vox2ras * [CRS_CT.';ones(1,size(CRS_CT,1))] ;
-ras_CT = ras_CT(1:3,:).' ;
-
-X_CT = reshape(ras_CT(:,1),size(C_CT)) ;
-Y_CT = reshape(ras_CT(:,2),size(C_CT)) ;
-Z_CT = reshape(ras_CT(:,3),size(C_CT)) ;
+% [C_CT,R_CT,S_CT] = ndgrid(c_CT,r_CT,s_CT) ;
+% CRS_CT = [C_CT(:),R_CT(:),S_CT(:)];
+% 
+% ras_CT = CT.vox2ras * [CRS_CT.';ones(1,size(CRS_CT,1))] ;
+% ras_CT = ras_CT(1:3,:).' ;
+% 
+% X_CT = reshape(ras_CT(:,1),size(C_CT)) ;
+% Y_CT = reshape(ras_CT(:,2),size(C_CT)) ;
+% Z_CT = reshape(ras_CT(:,3),size(C_CT)) ;
 
 
 %% Find electrodes
