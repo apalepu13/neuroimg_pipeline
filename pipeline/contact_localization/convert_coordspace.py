@@ -32,7 +32,6 @@ if __name__ == '__main__':
     parser.add_argument('ct_nifti_img', help="The CT image volume in its original space.")
     parser.add_argument('mri_nifti_img', help="Brain MRI image space.")
     parser.add_argument('mapping_transformation_file', help="The mapping transformation file.")
-    parser.add_argument('register_conformed_file', help="The conformed mapping transformation file.")
     parser.add_argument('clustered_points_file', help="The output datafile with all the electrode points clustered.")
     parser.add_argument('outputcoordsfile', help="The output datafile for electrodes mapped to correct coords.")
     args = parser.parse_args()
@@ -41,7 +40,6 @@ if __name__ == '__main__':
     ct_nifti_img = args.ct_nifti_img
     mri_nifti_img = args.mri_nifti_img
     mapping_transformation_file = args.mapping_transformation_file
-    register_conformed_file = args.register_conformed_file
     clustered_points_file = args.clustered_points_file
     outputcoordsfile = args.outputcoordsfile
 
@@ -61,5 +59,3 @@ if __name__ == '__main__':
                                              modified_coords[i][1],
                                              modified_coords[i][2]))
 
-    conformed_modified_coords = np.array(
-        [transform(coords, ct_nifti_img, mri_nifti_img, register_conformed_file) for coords in modified_coords])

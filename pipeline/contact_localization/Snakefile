@@ -22,6 +22,10 @@ TVB_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
                                                 "{patient_id}",
                                                 "tvb")
 
+PATIENT_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
+                                        "{patient_id}")
+NATIVESPACE_OUTPUT_DIR = os.path.join(PATIENT_OUTPUT_DIR,
+                                      "nativespace-transform")
 subworkflow reconstruction_workflow:
     workdir:
         "../"
@@ -119,8 +123,8 @@ rule convert_coords_to_conformed_space:
         # mapping matrix for post to pre in T1
         MAPPING_FILE_ORIG = reconstruction_workflow(os.path.join(COREGISTRATION_OUTPUT_DIR,
                                     "fsl_ct-to-t1_omat.txt")),
-        register_conformed_file = reconstruction_workflow(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                                                       "register.conformed.dat")),
+        register_conformed_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
+                                                                       "register.conformed.dat"),
         clustered_center_points = os.path.join(COREGISTRATION_OUTPUT_DIR,
                                                      '{patient_id}_elecxyz.txt'),
         # clustered_center_voxels = os.path.join(COREGISTRATION_OUTPUT_DIR,
@@ -131,9 +135,9 @@ rule convert_coords_to_conformed_space:
         MRI_NIFTI_IMG = reconstruction_workflow(os.path.join(config['finaloutput_datadir'],
                                      "{patient_id}",
                                      "T1.nii.gz")),
-        CONFORM_MRI_NIFTI_IMG = reconstruction_workflow(os.path.join(config['finaloutput_datadir'],
+        CONFORM_MRI_NIFTI_IMG = os.path.join(config['finaloutput_datadir'],
                                                                      "{patient_id}",
-                                                                     "T1.conform.nii.gz"))
+                                                                     "T1.conform.nii.gz")
     output:
         clustered_center_points_flirt = os.path.join(COREGISTRATION_OUTPUT_DIR,
                                                      '{patient_id}_native_flirt_elec_xyz.txt'),
