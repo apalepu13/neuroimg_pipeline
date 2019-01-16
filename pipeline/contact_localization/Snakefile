@@ -33,19 +33,18 @@ subworkflow reconstruction_workflow:
 # First rule
 rule all:
     input:
-
         # clustered_center_points = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
         #                                '{patient_id}_elec.mat'),
         #                                  patient_id = config['patients']),
         clustered_center_points_flirt = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                                     '{patient_id}_native_flirt_elec_xyz.mat'),
+                                                     '{patient_id}_native_flirt_elec_xyz.txt'),
                                             patient_id = config['patients']),
-        clustered_center_points_robustreg = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                                             '{patient_id}_native_robustreg_elec_xyz.mat'),
-                                                patient_id = config['patients']),
-        clustered_center_points_lddmm = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                                     '{patient_id}_native_lddmm_elec_xyz.mat'),
-                                                patient_id = config['patients']),
+        # clustered_center_points_robustreg = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                                      '{patient_id}_native_robustreg_elec_xyz.mat'),
+        #                                         patient_id = config['patients']),
+        # clustered_center_points_lddmm = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                              '{patient_id}_native_lddmm_elec_xyz.mat'),
+        #                                         patient_id = config['patients']),
     shell:
         "echo 'done'"
 
@@ -88,7 +87,7 @@ rule convert_coords_to_native_T1:
         # DEPENDENCY ON RECONSTRUCTION WORKFLOW
         # mapping matrix for post to pre in T1
         MAPPING_FILE_ORIG = reconstruction_workflow(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                    "fsl_ct-to-pre-t1_omat.txt")),
+                                    "fsl_ct-to-t1_omat.txt")),
         output_registration_file = reconstruction_workflow(os.path.join(COREGISTRATION_OUTPUT_DIR,
                                                 "CT_in_pre_T1_robustregistration.txt")),
         LDDMM_MAPPED_FILE=reconstruction_workflow(os.path.join(COREGISTRATION_OUTPUT_DIR,
@@ -113,3 +112,57 @@ rule convert_coords_to_native_T1:
                             -dest {output.clustered_center_points_flirt} -xfm {input.MAPPING_FILE_ORIG};"
         "img2imgcoord -mm -src {input.clustered_center_points} \
                             -dest {output.clustered_center_points_lddmm} -xfm {input.LDDMM_MAPPED_FILE};"
+
+rule convert_coords_to_conformed_space:
+    input:
+        # DEPENDENCY ON RECONSTRUCTION WORKFLOW
+        # mapping matrix for post to pre in T1
+        MAPPING_FILE_ORIG = reconstruction_workflow(os.path.join(COREGISTRATION_OUTPUT_DIR,
+                                    "fsl_ct-to-t1_omat.txt")),
+        register_conformed_file = reconstruction_workflow(os.path.join(COREGISTRATION_OUTPUT_DIR,
+                                                                       "register.conformed.dat")),
+        # output_registration_file = reconstruction_workflow(os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                         "CT_in_pre_T1_robustregistration.txt")),
+        # LDDMM_MAPPED_FILE=reconstruction_workflow(os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                 "ldmm_ct-to-pre-t1_omat.txt")),
+        clustered_center_points = os.path.join(COREGISTRATION_OUTPUT_DIR,
+                                                     '{patient_id}_elecxyz.txt'),
+        # clustered_center_voxels = os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                        '{patient_id}_elec_voxels.mat'),
+        CT_NIFTI_IMG = reconstruction_workflow(os.path.join(config['finaloutput_datadir'],
+                                    "{patient_id}",
+                                    "CT.nii.gz")),
+        MRI_NIFTI_IMG = reconstruction_workflow(os.path.join(config['finaloutput_datadir'],
+                                     "{patient_id}",
+                                     "T1.nii.gz")),
+        CONFORM_MRI_NIFTI_IMG = reconstruction_workflow(os.path.join(config['finaloutput_datadir'],
+                                                                     "{patient_id}",
+                                                                     "T1.conform.nii.gz"))
+    output:
+        clustered_center_points_flirt = os.path.join(COREGISTRATION_OUTPUT_DIR,
+                                                     '{patient_id}_native_flirt_elec_xyz.txt'),
+        conformed_center_points_flirt = os.path.join(COREGISTRATION_OUTPUT_DIR,
+                                                     '{patient_id}_conform_flirt_elec_xyz.txt'),
+        # clustered_center_points_robustreg = os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                                      '{patient_id}_native_robustreg_elec_xyz.mat'),
+        # clustered_center_points_lddmm = os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                              '{patient_id}_native_lddmm_elec_xyz.mat'),
+        # clustered_center_voxels = os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                        '{patient_id}_native_elec_voxels.mat'),
+    shell:
+        "python -m convert_coordspace " \
+                        "{input.CT_NIFTI_IMG} " \
+                        "{input.MRI_NIFTI_IMG} " \
+                        "{input.MAPPING_FILE_ORIG} " \
+                        "{input.clustered_center_points} " \
+                        "{output.clustered_center_points_flirt};"
+
+        "python -m conform_coordspace " \
+                        "{input.CONFORM_MRI_NIFTI_IMG} " \
+                        "{input.MRI_NIFTI_IMG} " \
+                        "{input.register_conformed_file} " \
+                        "{output.clustered_center_points_flirt} " \
+                        "{output.conformed_center_points_flirt};"
+
+                # "echo {input.clustered_center_points} | img2imgcoord -mm -src {input.CT_NIFTI_IMG} \
+                #     -dest {input.MRI_NIFTI_IMG} -xfm {input.MAPPING_FILE_ORIG};"
