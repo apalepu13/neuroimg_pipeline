@@ -116,6 +116,7 @@ def create_surface_main(cort_surf_direc: os.PathLike,
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('subject_dir', help="The result directory of the dataset")
+    parser.add_argument('subcort_dir', help="The directory with the subcortical surfaces files.")
     parser.add_argument('source_lut', help="Figure directory to save resulting figures.")
     parser.add_argument('target_lut', help="The output model computed filename.")
     parser.add_argument('struct_zip_file', help="The output meta data filename")
@@ -127,10 +128,11 @@ if __name__ == '__main__':
     target_lut = args.target_lut
     struct_zip_file = args.struct_zip_file
     out_surfaces_dir = args.out_surfaces_dir
+    subcort_surf_direc = args.subcort_dir
 
     # directories to the cortical and subcortical data
     cort_surf_direc = os.path.join(subject_dir, "surf")
-    subcort_surf_direc = os.path.join(subject_dir, "aseg2srf")
+    # subcort_surf_direc = os.path.join(subject_dir, "aseg2srf")
     label_direc = os.path.join(subject_dir, 'label')
     include_unknown = True
 

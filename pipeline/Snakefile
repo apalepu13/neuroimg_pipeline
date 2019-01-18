@@ -90,11 +90,14 @@ ATLAS=['dk', 'destrieux']
 ''' USER DEFINED DIRECTORIES TO STORE FINAL DATA IN ORGANIZED SUBFOLDERS '''
 FS_PATIENT_OUTPUT_DIR = os.path.join(config['fs_outputdatadir'],
                                      "{patient_id}")
+
 PATIENT_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
                                         "{patient_id}")
+
 COREGISTRATION_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
                                          "{patient_id}",
                                          "coregistration")
+
 TVB_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
                                                 "{patient_id}",
                                                 "tvb")
@@ -109,6 +112,17 @@ sval = "pial"
 hemispheres = ['lh', 'rh']
 resamp_target = "fsaverage5"
 
+print(config['patients'])
+
+subworkflow reconstruction_workflow:
+    workdir:
+        "./reconstruction/"
+    snakefile:
+        "./reconstruction/Snakefile"
+    configfile:
+        "./config/localconfig.yaml"
+
+
 # First rule
 rule all:
     input:
@@ -121,183 +135,24 @@ rule all:
         #                                             "voxels_in_T1_volume_destrieux.txt"),
         #                               patient_id=config['patients']),
         # master output file
-        output_file=expand(os.path.join(TVB_OUTPUT_DIR,
-                                        "conformed_space",
-                                        "connectivity_{atlas}.zip"),
-                           patient_id=config['patients'], atlas=ATLAS),
+        # output_file=expand(os.path.join(TVB_OUTPUT_DIR,
+        #                                 "conformed_space",
+        #                                 "connectivity_{atlas}.zip"),
+        #                    patient_id=config['patients'], atlas=ATLAS),
         # master output file
-        conformed_output_file = expand(os.path.join(TVB_OUTPUT_DIR,
-                                    "native_space",
+        native_output_file = expand(os.path.join(TVB_OUTPUT_DIR,
+                                    "native-space",
                                   "connectivity_{atlas}.zip"),
                      patient_id=config['patients'], atlas=ATLAS),
         # label in source lut volume
-        label_volume_file = expand(os.path.join(config['finaloutput_datadir'],
-                                                "{patient_id}",
-                                                "tvb",
-                                                 "label_in_T1_volume.{atlas}.nii.gz"),
-                                            patient_id=config['patients'], atlas=ATLAS),
-        # CT_IN_T1_NIFTI_IMG_ORIG=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-        #                                        "CT_IN_T1.mgz"),
-        #                                  patient_id=config['patients']),
-        # mapping matrix for CT to T1
-        # MAPPING_FILE=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-        #                                 "fsl_ct-to-t1_omat.txt"),
-        #                             patient_id=config['patients']),
-        # OUTPUT REGISTRATION FILES FROM FLIRT, ROBUST_REGISTER AND LDMM
-        OUTPUT_ROBUST_REGISTRATION_FILE = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                        "CT_in_pre_T1_robustregistration.mgz"),
-                                         patient_id=config['patients']),
-        # LDDMM_MAPPED_FILE=expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-        #                                 "ldmm_ct-to-pre-t1_omat.txt"),
-        #                             patient_id=config['patients']),
-        brainmask_inct_file = expand(os.path.join(config['finaloutput_datadir'],
-                                                     "{patient_id}",
-                                                     "nativespace-transform",
-                                                     "brainmask_native_inct.nii.gz"),
-                                    patient_id=config['patients']),
+        # label_volume_file = expand(os.path.join(config['finaloutput_datadir'],
+        #                                         "{patient_id}",
+        #                                         "tvb",
+        #                                          "label_in_T1_volume.{atlas}.nii.gz"),
+        #                                     patient_id=config['patients'], atlas=ATLAS),
     shell:
         "echo 'done'"
 
-
-"""
-Rule for extracting surface geometry information from the
-MRI volumes
-"""
-rule create_structural_dataset:
-    input:
-        subcort_success_flag_file=os.path.join(PATIENT_OUTPUT_DIR,
-                                    "{patient_id}_subcort_success.txt"),
-        lhpial=os.path.join(PATIENT_OUTPUT_DIR,
-                            "lh.pial.asc"),
-        rhpial=os.path.join(PATIENT_OUTPUT_DIR,
-                            "rh.pial.asc"),
-        lhlabel=os.path.join(PATIENT_OUTPUT_DIR,
-                            "lh.aparc.annot"),
-        rhlabel=os.path.join(PATIENT_OUTPUT_DIR,
-                            "rh.aparc.annot"),
-        label_volume_file=os.path.join(TVB_OUTPUT_DIR,
-                                "label_in_T1_volume.{atlas}.nii.gz"),
-    params:
-        subjdir=os.path.join(config['fs_outputdatadir'], "{patient_id}"),
-        output_surface_dir=TVB_OUTPUT_DIR,
-        lut_fs=os.path.join(FREESURFER_HOME, "FreeSurferColorLUT.txt"),
-        lut_target=os.path.join(MRTRIX3_HOME, "share/mrtrix3/labelconvert/fs_default.txt"),
-        scripts_dir=os.path.join(SCRIPTS_UTIL_DIR)
-    output:
-        output_file=os.path.join(TVB_OUTPUT_DIR,
-                                "conformed_space",
-                                "connectivity_{atlas}.zip")
-    shell:
-        "echo 'RUNNING CREATION OF FINAL FILES...';"
-        "cd {params.scripts_dir};"
-        # "touch {output.output_file};"
-        "python -m create_surface_files {params.subjdir} \
-                                        {params.lut_fs} \
-                                        {params.lut_target} \
-                                        {output.output_file} \
-                                        {params.output_surface_dir};"
-
-rule create_nativespace_structural_dataset:
-    input:
-        subcort_success_flag_file=os.path.join(PATIENT_OUTPUT_DIR,
-                                    "{patient_id}_subcort_success.txt"),
-        lhpial=os.path.join(NATIVESPACE_OUTPUT_DIR,
-                            "lh_native.asc"),
-        rhpial=os.path.join(NATIVESPACE_OUTPUT_DIR,
-                            "rh_native.asc"),
-        lhlabel=os.path.join(NATIVESPACE_OUTPUT_DIR,
-                            "lh.native.aparc.annot"),
-        rhlabel=os.path.join(NATIVESPACE_OUTPUT_DIR,
-                            "rh.native.aparc.annot"),
-    params:
-        subjdir=os.path.join(config['fs_outputdatadir'], "{patient_id}"),
-        output_surface_dir=TVB_OUTPUT_DIR,
-        lut_fs=os.path.join(FREESURFER_HOME, "FreeSurferColorLUT.txt"),
-        lut_target=os.path.join(MRTRIX3_HOME, "share/mrtrix3/labelconvert/fs_default.txt"),
-        scripts_dir=os.path.join(SCRIPTS_UTIL_DIR)
-    output:
-        output_file=os.path.join(TVB_OUTPUT_DIR,
-                                "conformed_space",
-                                "connectivity_{atlas}.zip")
-    shell:
-        "echo 'RUNNING CREATION OF FINAL FILES...';"
-        "cd {params.scripts_dir};"
-        # "touch {output.output_file};"
-        "python -m create_surface_files {params.subjdir} \
-                                        {params.lut_fs} \
-                                        {params.lut_target} \
-                                        {output.output_file} \
-                                        {params.output_surface_dir};"
-
-
-"""
-Rule for converting .dicom -> .nifti
-
-Assumes user has premri and postct with DTI being optional, as this is not standard clinical procedure
-in the USA.
-"""
-rule dicom_to_nifti:
-    params:
-        CT_FOLDER=os.path.join(config['rawdatadir'],
-                                        "{patient_id}", 'postct'),
-        MRI_FOLDER=os.path.join(config['rawdatadir'],
-                                        "{patient_id}", 'premri'),
-    output:
-        CT_NIFTI_IMG=os.path.join(config['finaloutput_datadir'],
-                                        "{patient_id}",
-                                         "CT.nii.gz"),
-        MRI_NIFTI_IMG=os.path.join(config['finaloutput_datadir'],
-                                        "{patient_id}",
-                                          "T1.nii.gz")
-    shell:
-        "mrconvert {params.CT_FOLDER} {output.CT_NIFTI_IMG};"
-        "mrconvert {params.MRI_FOLDER} {output.MRI_NIFTI_IMG};"
-
-"""
-Rule to pre-setup the freesurfer output directory with the orig.mgz file
-"""
-rule pre_reconstruction:
-    input:
-        MRI_NIFTI_IMG=os.path.join(config['finaloutput_datadir'],
-                                        "{patient_id}",
-                                          "T1.nii.gz")
-    params:
-        patient="{patient_id}", # patient_id=config['patients']),
-        SUBJECTS_DIR=os.path.join(config['fs_outputdatadir']),
-    output:
-        outmgz_file=os.path.join(config['fs_outputdatadir'],
-                                     "{patient_id}",
-                                    "mri/orig",
-                                     "001.mgz")
-    shell:
-        "export SUBJECTS_DIR={params.SUBJECTS_DIR}; \
-            SUBJECTS_DIR={params.SUBJECTS_DIR};"
-        "mri_convert {params.MRI_NIFTI_IMG} {output.outmgz_file};"
-
-"""
-Rule for reconstructions .nifti -> output files.
-
-Since Freesurfer creates the directory on its own + snakemake does too,
-I instead specify an output as a "temporary" flagger file that will let snakemake
-know that reconstruction was completed.
-"""
-rule reconstruction:
-    input:
-        MRI_NIFTI_IMG=os.path.join(PATIENT_OUTPUT_DIR,
-                                          "T1.nii.gz")
-    params:
-        patient="{patient_id}",
-        SUBJECTS_DIR=os.path.join(config['fs_outputdatadir']),
-    output:
-        outsuccess_file=os.path.join(config['fs_outputdatadir'],
-                                "{patient_id}_recon_success.txt")
-    shell:
-        "export SUBJECTS_DIR={params.SUBJECTS_DIR}; \
-            SUBJECTS_DIR={params.SUBJECTS_DIR};"
-        "recon-all -i {input.MRI_NIFTI_IMG} \
-            -subjid {params.patient} -all \
-            -parallel -openmp 4;"
-        "touch {output.outsuccess_file}"
 
 """
 Rule for extracting the subcortical regions
@@ -324,52 +179,41 @@ rule create_subcortical_volume:
         "export SUBJECTS_DIR={params.subj_dir}; \
         SUBJECTS_DIR={params.subj_dir}; \
 	    {params.scripts_dir}/aseg2srf -s {params.patient};"
-        "cp -r {params.subj_dir}/{params.patient}/aseg2srf/ {params.new_FREESURFER_HOME}/aseg2srf;"
+        "cp -r {params.subj_dir}/{params.patient}/aseg2srf {params.new_FREESURFER_HOME}/aseg2srf_conformed;"
         "touch {output.subcort_success_flag_file};"
 
-"""
-Rule for converting the pial surfaces to ascii data, so that it is readable by python/matlab.
-"""
-rule convert_pial_surface_files:
+rule create_subcortical_volume_native:
     input:
-        lhpial=os.path.join(PATIENT_OUTPUT_DIR,
-                            "lh.pial"),
-        rhpial=os.path.join(PATIENT_OUTPUT_DIR,
-                            "rh.pial"),
-        lhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
-                              "lh_native.pial"),
-        rhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
-                              "rh_native.pial"),
+        aseg_output_file=os.path.join(NATIVESPACE_OUTPUT_DIR,
+                                    "aseg.mgz"),
+        norm_output_file=os.path.join(NATIVESPACE_OUTPUT_DIR,
+                                    "norm.mgz"),
+    params:
+        new_FREESURFER_HOME=PATIENT_OUTPUT_DIR,
+        tempmridir = os.path.join(PATIENT_OUTPUT_DIR, "mri"),
+        subj_dir = os.path.join(config['finaloutput_datadir']),
+        patient = "{patient_id}",
+        scripts_dir = SCRIPTS_UTIL_DIR,
     output:
-        lhpial=os.path.join(PATIENT_OUTPUT_DIR,
-                            "lh.pial.asc"),
-        rhpial=os.path.join(PATIENT_OUTPUT_DIR,
-                            "rh.pial.asc"),
-        lhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
-                              "lh_native.asc"),
-        rhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
-                              "rh_native.asc"),
+        subcort_success_flag_file=os.path.join(PATIENT_OUTPUT_DIR,
+                                            "{patient_id}_subcortnative_success.txt"),
     shell:
-        "mris_convert {input.lhpial} {output.lhpial};"
-        "mris_convert {input.rhpial} {output.rhpial};"
-        "mris_convert {input.lhpial_native} {output.lhpial_native};"
-        "mris_convert {input.rhpial_native} {output.rhpial_native};"
+        "export SUBJECTS_DIR=~/hdd/data/neuroimaging/freesurfer_output/outputfile/;"
 
+        # Create directories for temp files and result
+        "mkdir -p {params.tempmridir};"
+        "cp {input.aseg_output_file} {params.tempmridir}/aseg.mgz;"
+        "cp {input.norm_output_file} {params.tempmridir}/norm.mgz;"
 
+        "export SUBJECTS_DIR={params.subj_dir}; \
+        SUBJECTS_DIR={params.subj_dir}; \
+	    {params.scripts_dir}/aseg2srf -s {params.patient};"
+        "cp -r {params.subj_dir}/{params.patient}/aseg2srf {params.new_FREESURFER_HOME}/aseg2srf_native;"
+        "touch {output.subcort_success_flag_file};"
 
-rule convert_to_nifti:
-    input:
-        brainmask_mgz = os.path.join(config['finaloutput_datadir'],
-                                                     "{patient_id}",
-                                                     "nativespace-transform",
-                                     "brainmask_native.mgz")
-    output:
-        brainmask_nifti = os.path.join(config['finaloutput_datadir'],
-                                                     "{patient_id}",
-                                                     "nativespace-transform",
-                                       "brainmask_native.nii.gz")
-    shell:
-        "mri_convert {input.brainmask_mgz} {output.brainmask_nifti};"
+        # perform clean up of the aseg2srf performed on native files
+        "rm -rf {params.subj_dir}/{params.patient}/aseg2srf;"
+        "rm -rf {params.tempmridir};"
 
 """
 Rule to convert nifti to MNI space image volumes.
@@ -405,108 +249,6 @@ rule normalize_image:
         "cp {input.PREMRI_NIFTI_IMG_MGZ} {output.PREMRI_IMG_MGZ_norm};"
         "mri_normalize {input.CT_NIFTI_IMG_MGZ} {output.CT_IMG_MGZ_norm};"
         "mri_convert -c {output.CT_IMG_MGZ_norm} {output.CT_IMG_MGZ_norm};"
-
-
-
-"""
-Rule for coregistering .nifit images -> .nifti for T1 space
-
-E.g. useful for CT, and DTI images to be coregistered
-"""
-rule coregistert1_ct_to_pre:
-    input:
-        # PREMRI_NIFTI_IMG_MGZ = os.path.join(COREGISTRATION_OUTPUT_DIR,
-        #                                     "preT1_normalize.mgz"),
-        PREMRI_NIFTI_IMG_MGZ = os.path.join(PATIENT_OUTPUT_DIR,
-                                            "T1.nii.gz"),
-        CT_NIFTI_IMG_MGZ = os.path.join(PATIENT_OUTPUT_DIR,
-                                             "CT.nii.gz"),
-    output:
-        CT_IN_PRE_NIFTI_IMG_ORIGgz = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                                      "CT_IN_T1.nii.gz"),
-        # mapping matrix for post to pre in T1
-        MAPPING_FILE_ORIG = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                    "fsl_ct-to-t1_omat.txt"),
-    shell:
-        "flirt -in {input.CT_NIFTI_IMG_MGZ} \
-                            -ref {input.PREMRI_NIFTI_IMG_MGZ} \
-                            -omat {output.MAPPING_FILE_ORIG} \
-                            -out {output.CT_IN_PRE_NIFTI_IMG_ORIGgz};"
-
-
-"""
-Rule to map the brain mask over to the CT space.
-"""
-rule map_brainmask_to_ct:
-    input:
-        brainmask_file = os.path.join(config['finaloutput_datadir'],
-                                                     "{patient_id}",
-                                                     "nativespace-transform",
-                                                     "brainmask_native.nii.gz"),
-        CT_NIFTI_IMG = os.path.join(config['finaloutput_datadir'],
-                                                                   "{patient_id}",
-                                                                   "CT.nii.gz"),
-    output:
-        # mapping matrix for post to pre in T1
-        MAPPING_FILE = os.path.join(config['finaloutput_datadir'],
-                                                     "{patient_id}",
-                                                     "nativespace-transform",
-                                    "fsl_brainmask_to_ct_omat.txt"),
-        brainmask_inct_file = os.path.join(config['finaloutput_datadir'],
-                                                     "{patient_id}",
-                                                     "nativespace-transform",
-                                                     "brainmask_native_inct.nii.gz"),
-    shell:
-        "flirt -in {input.brainmask_file} \
-                            -ref {input.CT_NIFTI_IMG} \
-                            -omat {output.MAPPING_FILE} \
-                            -out {output.brainmask_inct_file};"
-
-
-"""
-Rule for robust registration of two volumes within two volumes
-"""
-rule robust_registration_ct_to_pre:
-    input:
-        PREMRI_NIFTI_IMG_MGZ = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                     "preT1_normalize.mgz"),
-        CT_NIFTI_IMG_MGZ = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                     "CT_normalize.mgz"),
-    output:
-        output_registration_file = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                                "CT_in_pre_T1_robustregistration.txt"),
-        output_registration_image = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                                 "CT_in_pre_T1_robustregistration.mgz"),
-        weights_file = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                                "CT_in_pre_T1_outlierweights.mgz")
-    shell:
-        "mri_robust_register --mov {input.CT_NIFTI_IMG_MGZ} \
-                            --dst {input.PREMRI_NIFTI_IMG_MGZ} \
-                            --lta {output.output_registration_file} \
-                            --mapmovhdr {output.output_registration_image} \
-                            -weights {output.weights_file} \
-                            --satit \
-                            --iscale;"
-
-"""
-Rule for running lddmm algorithm script using tensorflow
-"""
-rule lddmm_registration_ct_to_pre:
-    input:
-        PREMRI_NIFTI_IMG_MGZ = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                            "preT1_normalize.mgz"),
-        POSTMRI_NIFTI_IMG_MGZ = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                             "CT_normalize.mgz"),
-    output:
-        LDDMM_MAPPED_FILE=os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                        "ldmm_ct-to-pre-t1_omat.txt"),
-        output_registration_image = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                        "CT_in_pre_T1_lddmm.mgz"),
-    shell:
-        "echo 'need to implement.';"
-
-
-
 
 rule clean_structural_dataset:
     params:
@@ -645,89 +387,48 @@ rule register_conformed_to_orig:
                 --reg {output.registration_conformed_file} --noedit --regheader;"
 
 
-# rule convert_anatomical_to_conformed_space:
-#     input:
-#         registration_conformed_file = os.path.join(PATIENT_OUTPUT_DIR,
-#                                                 "nativespace-transform",
-#                                                 "register.conformed.dat")
-#     params:
-#
-#     output:
-#
-#
-#     shell:
-
-
 """
 Helps map back image volumes, brain masks to their native space.
 """
-
-def get_subcortical_surf_files(dire):
-    srfdict = {}
-
-    basedir = os.path.basename(dire)
-    srffiles = [f for f in os.listdir(dire) if f.endswith('.srf') and not f.startswith('.')]
-
-    # for f in srffiles:
-    #     srfdict[f] = os.path.join(NATIVESPACE_OUTPUT_DIR, os.path.basename(f))
-
-    return srffiles
-
-# all_subcortical_srffiles = get_subcortical_surf_files(os.path.join(PATIENT_OUTPUT_DIR, "aseg2srf"))
-
-# rule convert_subcorticalsurf_to_anatomical_space:
-#     input:
-#         rawavg_file = os.path.join(PATIENT_OUTPUT_DIR,
-#                                         "rawavg.mgz"),
-#         subcortical_surf_files = expand(os.path.join(PATIENT_OUTPUT_DIR, "aseg2srf",
-#                                                      "{subcortical_srf_filepath}"),
-#                                         patient_id=config['patients'],
-#                                         subcortical_srf_filepath = all_subcortical_srffiles),
-#         registration_native_file = os.path.join(PATIENT_OUTPUT_DIR,
-#                                         "nativespace-transform",
-#                                         "register.native.dat"),
-#     params:
-#         patient_id = "{patient_id}",
-#     output:
-#         subcortical_surf_files = os.path.join(NATIVESPACE_OUTPUT_DIR, "aseg2srf",
-#                                                      "{subcortical_srf_filepath}"),
-#     shell:
-#         "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file} \
-#                 --tval {output.subcortical_surf_files} --tval-xyz {input.rawavg_file} --hemi rh --s {params.patient_id};"
-
-
 rule convert_to_anatomical_space:
     input:
-        brainmask_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                      "brainmask.mgz"),
-        rawavg_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                        "rawavg.mgz"),
-        aseg_output_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                        "aseg.mgz"),
-        wm_output_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                      "wm.mgz"),
-        aparc_atlas_aseg_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                             "aparc.a2009s+aseg.mgz"),
-        aparc_dkatlas_aseg_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                            "aparc+aseg.mgz"),
-        lhpial = os.path.join(PATIENT_OUTPUT_DIR,
-                              "lh.pial"),
-        rhpial = os.path.join(PATIENT_OUTPUT_DIR,
-                              "rh.pial"),
-        lhlabel = os.path.join(PATIENT_OUTPUT_DIR,
-                               "lh.aparc.annot"),
-        rhlabel = os.path.join(PATIENT_OUTPUT_DIR,
-                               "rh.aparc.annot"),
+        brainmask_file = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                                      "brainmask.mgz")),
+        rawavg_file = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                                        "rawavg.mgz")),
+        aseg_output_file = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                                        "aseg.mgz")),
+        wm_output_file = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                                      "wm.mgz")),
+        aparc_atlas_aseg_file = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                                             "aparc.a2009s+aseg.mgz")),
+        aparc_dkatlas_aseg_file = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                                            "aparc+aseg.mgz")),
+        lhpial = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                              "lh.pial")),
+        rhpial = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                              "rh.pial")),
+        norm_output_file = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                                "norm.mgz")),
         registration_native_file = os.path.join(PATIENT_OUTPUT_DIR,
                                                 "nativespace-transform",
                                                 "register.native.dat"),
+
+        lhlabel = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                                                       "lh.aparc.annot")),
+        rhlabel = reconstruction_workflow(os.path.join(PATIENT_OUTPUT_DIR,
+                                                       "rh.aparc.annot")),
     params:
         patient_id = "{patient_id}",
+
+        norm_output_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
+                                "norm.mgz"),
+        aseg_output_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
+                                        "aseg.mgz"),
     output:
         brainmask_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
                                       "brainmask_native.mgz"),
-        aseg_output_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
-                                        "subcortical_native.mgz"),
+
         wm_output_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
                                       "wm_native.mgz"),
         aparc_atlas_aseg_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
@@ -738,10 +439,11 @@ rule convert_to_anatomical_space:
                               "lh_native.pial"),
         rhpial = os.path.join(NATIVESPACE_OUTPUT_DIR,
                               "rh_native.pial"),
-        lhlabel = os.path.join(NATIVESPACE_OUTPUT_DIR,
-                               "lh.native.aparc.annot"),
-        rhlabel = os.path.join(NATIVESPACE_OUTPUT_DIR,
-                               "rh.native.aparc.annot"),
+        # lhlabel = os.path.join(NATIVESPACE_OUTPUT_DIR,
+        #                        "lh.native.aparc.annot"),
+        # rhlabel = os.path.join(NATIVESPACE_OUTPUT_DIR,
+        #                        "rh.native.aparc.annot"),
+
     shell:
         # convert surfaces to the native space
         "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file}  \
@@ -751,112 +453,117 @@ rule convert_to_anatomical_space:
 
         # convert volume to its previous volume, e.g. brian mask
         "mri_vol2vol --mov {input.brainmask_file} --targ {input.rawavg_file} \
-                        --regheader --o {output.brainmask_file} --no-save-reg;"
+                --regheader --o {output.brainmask_file} --no-save-reg;"
+        "mri_vol2vol --mov {input.norm_output_file} --targ {input.rawavg_file} \
+                        --regheader --o {params.norm_output_file} --no-save-reg;"
 
         # convert label volumes -> native space
         "mri_label2vol --seg {input.aseg_output_file} --temp {input.rawavg_file} \
-                        --o {output.aseg_output_file} --regheader {input.aseg_output_file};"
+                        --o {params.aseg_output_file} --regheader {input.aseg_output_file};"
         "mri_label2vol --seg {input.wm_output_file} --temp {input.rawavg_file} \
                                 --o {output.wm_output_file} --regheader {input.wm_output_file};"
         "mri_label2vol --seg {input.aparc_atlas_aseg_file} --temp {input.rawavg_file} \
                                 --o {output.aparc_atlas_aseg_file} --regheader {input.aparc_atlas_aseg_file};"
         "mri_label2vol --seg {input.aparc_dkatlas_aseg_file} --temp {input.rawavg_file} \
                                 --o {output.aparc_dkatlas_aseg_file} --regheader {input.aparc_dkatlas_aseg_file};"
-        "mri_label2vol --seg {input.rhlabel} --temp {input.rawavg_file} \
-                                --o {output.rhlabel} --regheader {input.rhlabel};"
-        "mri_label2vol --seg {input.lhlabel} --temp {input.rawavg_file} \
-                                --o {output.lhlabel} --regheader {input.lhlabel};"
+        # "mri_label2vol --annot {input.rhlabel} --temp {input.rawavg_file} \
+        #                         --o {output.rhlabel} --regheader {input.rhlabel};"
+        # "mri_label2vol --annot {input.lhlabel} --temp {input.rawavg_file} \
+        #                         --o {output.lhlabel} --regheader {input.lhlabel};"
+
 
 """
-Rule to copy all necessary reconstruction files to a temporary directory,
-so that we can explicitly say which files are being analyzed/used.
-
-Add here files to copy them to the directory that we allow scripts to draw from.
+Rule for converting the pial surfaces to ascii data, so that it is readable by python/matlab.
 """
-rule copy_reconstruction_files:
+rule convert_pial_surface_files:
     input:
-        outsuccess_file=os.path.join(config['fs_outputdatadir'],
-                                "{patient_id}_recon_success.txt")
-    params:
-        lhpial=os.path.join(config['fs_outputdatadir'],
-                            "{patient_id}",
-                            "surf/lh.pial"),
-        rhpial=os.path.join(config['fs_outputdatadir'],
-                            "{patient_id}",
-                            "surf/rh.pial"),
-        lhlabel=os.path.join(config['fs_outputdatadir'],
-                            "{patient_id}",
-                            "label/lh.aparc.annot"),
-        rhlabel=os.path.join(config['fs_outputdatadir'],
-                            "{patient_id}",
-                            "label/rh.aparc.annot"),
-        aseg_output_file = os.path.join(config['fs_outputdatadir'],
-                                        "{patient_id}",
-                                        "mri/aseg.mgz"),
-        norm_output_file = os.path.join(config['fs_outputdatadir'],
-                                        "{patient_id}",
-                                        "mri/norm.mgz"),
-        aparc_dkatlas_aseg_file = os.path.join(config['fs_outputdatadir'],
-                                                 "{patient_id}",
-                                                "mri/aparc+aseg.mgz"),
-        aparc_atlas_aseg_file = os.path.join(config['fs_outputdatadir'],
-                                                 "{patient_id}",
-                                                "mri/aparc.a2009s+aseg.mgz"),
-        t1_mgz_file = os.path.join(config['fs_outputdatadir'],
-                        "{patient_id}",
-                        "mri/T1.mgz"),
-        brainmask_file = os.path.join(config['fs_outputdatadir'],
-                                      "{patient_id}",
-                                      "mri/brainmask.mgz"),
-        rawavg_file = os.path.join(config['fs_outputdatadir'],
-                                      "{patient_id}",
-                                      "mri/rawavg.mgz"),
-        wm_output_file = os.path.join(config['fs_outputdatadir'],
-                                      "{patient_id}",
-                                      "mri/wm.mgz"),
-        talairach_transform_file = os.path.join(config['fs_outputdatadir'],
-                                                "{patient_id}",
-                                                "mri/transforms/talairach.xfm")
+        lhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
+                              "lh_native.pial"),
+        rhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
+                              "rh_native.pial"),
     output:
+        lhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
+                              "lh_native.asc"),
+        rhpial_native = os.path.join(PATIENT_OUTPUT_DIR,
+                              "rh_native.asc"),
+    shell:
+        "mris_convert {input.lhpial_native} {output.lhpial_native};"
+        "mris_convert {input.rhpial_native} {output.rhpial_native};"
+
+"""
+Rule for extracting surface geometry information from the
+MRI volumes
+"""
+rule create_structural_dataset:
+    input:
+        subcort_success_flag_file=os.path.join(PATIENT_OUTPUT_DIR,
+                                    "{patient_id}_subcort_success.txt"),
         lhpial=os.path.join(PATIENT_OUTPUT_DIR,
-                            "lh.pial"),
+                            "lh.pial.asc"),
         rhpial=os.path.join(PATIENT_OUTPUT_DIR,
-                            "rh.pial"),
+                            "rh.pial.asc"),
         lhlabel=os.path.join(PATIENT_OUTPUT_DIR,
                             "lh.aparc.annot"),
         rhlabel=os.path.join(PATIENT_OUTPUT_DIR,
                             "rh.aparc.annot"),
-        aseg_output_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                        "aseg.mgz"),
-        norm_output_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                        "norm.mgz"),
-        aparc_atlas_aseg_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                             "aparc.a2009s+aseg.mgz"),
-        aparc_dkatlas_aseg_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                            "aparc+aseg.mgz"),
-        t1_mgz_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                        "T1.mgz"),
-        brainmask_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                      "brainmask.mgz"),
-        wm_output_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                      "wm.mgz"),
-        rawavg_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                   "rawavg.mgz"),
-        talairach_transform_file = os.path.join(PATIENT_OUTPUT_DIR,
-                                                "transforms/talairach.xfm")
+        label_volume_file=os.path.join(TVB_OUTPUT_DIR,
+                                "label_in_T1_volume.{atlas}.nii.gz"),
+    params:
+        subcortdir = os.path.join(PATIENT_OUTPUT_DIR, "aseg2srf_conformed"),
+        subjdir=os.path.join(config['fs_outputdatadir'], "{patient_id}"),
+        output_surface_dir=TVB_OUTPUT_DIR,
+        lut_fs=os.path.join(FREESURFER_HOME, "FreeSurferColorLUT.txt"),
+        lut_target=os.path.join(MRTRIX3_HOME, "share/mrtrix3/labelconvert/fs_default.txt"),
+        scripts_dir=os.path.join(SCRIPTS_UTIL_DIR)
+    output:
+        output_file=os.path.join(TVB_OUTPUT_DIR,
+                                "conformed_space",
+                                "connectivity_{atlas}.zip")
     shell:
-        "cp {params.lhpial} {output.lhpial};"
-        "cp {params.rhpial} {output.rhpial};"
-        "cp {params.lhlabel} {output.lhlabel};"
-        "cp {params.rhlabel} {output.rhlabel};"
-        "cp {params.aseg_output_file} {output.aseg_output_file};"
-        "cp {params.norm_output_file} {output.norm_output_file};"
-        "cp {params.aparc_atlas_aseg_file} {output.aparc_atlas_aseg_file};"
-        "cp {params.aparc_dkatlas_aseg_file} {output.aparc_dkatlas_aseg_file};"
-        "cp {params.t1_mgz_file} {output.t1_mgz_file};"
+        "echo 'RUNNING CREATION OF FINAL FILES...';"
+        "cd {params.scripts_dir};"
+        # "touch {output.output_file};"
+        "python -m create_surface_files {params.subjdir} \
+                                        {params.subcortdir} \
+                                        {params.lut_fs} \
+                                        {params.lut_target} \
+                                        {output.output_file} \
+                                        {params.output_surface_dir};"
 
-        "cp {params.brainmask_file} {output.brainmask_file};"
-        "cp {params.rawavg_file} {output.rawavg_file};"
-        "cp {params.wm_output_file} {output.wm_output_file};"
-
-        "cp {params.talairach_transform_file} {output.talairach_transform_file};"
+rule create_nativespace_structural_dataset:
+    input:
+        subcort_success_flag_file = os.path.join(PATIENT_OUTPUT_DIR,
+                                         "{patient_id}_subcortnative_success.txt"),
+        lhpial=os.path.join(NATIVESPACE_OUTPUT_DIR,
+                            "lh_native.asc"),
+        rhpial=os.path.join(NATIVESPACE_OUTPUT_DIR,
+                            "rh_native.asc"),
+        lhlabel=os.path.join(PATIENT_OUTPUT_DIR,
+                            "lh.aparc.annot"),
+        rhlabel=os.path.join(PATIENT_OUTPUT_DIR,
+                            "rh.aparc.annot"),
+        # lhlabel=os.path.join(NATIVESPACE_OUTPUT_DIR,
+        #                     "lh.native.aparc.annot"),
+        # rhlabel=os.path.join(NATIVESPACE_OUTPUT_DIR,
+        #                     "rh.native.aparc.annot"),
+    params:
+        subcortdir = os.path.join(PATIENT_OUTPUT_DIR, "aseg2srf_native"),
+        subjdir=os.path.join(config['fs_outputdatadir'], "{patient_id}"),
+        output_surface_dir = os.path.join(TVB_OUTPUT_DIR, "native-space"),
+        lut_fs=os.path.join(FREESURFER_HOME, "FreeSurferColorLUT.txt"),
+        lut_target=os.path.join(MRTRIX3_HOME, "share/mrtrix3/labelconvert/fs_default.txt"),
+        scripts_dir=os.path.join(SCRIPTS_UTIL_DIR)
+    output:
+        output_file=os.path.join(TVB_OUTPUT_DIR,
+                                "native-space",
+                                "connectivity_{atlas}.zip")
+    shell:
+        "echo 'RUNNING CREATION OF FINAL FILES...';"
+        "cd {params.scripts_dir};"
+        # "touch {output.output_file};"
+        "python -m create_surface_files {params.subjdir} \
+                                        {params.subcortdir} \
+                                        {params.lut_fs} \
+                                        {params.lut_target} \
+                                        {output.output_file} \
+                                        {params.output_surface_dir};"
