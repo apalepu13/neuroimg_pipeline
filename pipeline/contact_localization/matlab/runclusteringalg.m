@@ -79,7 +79,7 @@ subjID    = 3 ;
 % % params.depth.num     = [10 ,10 ,10 ,10 ,10, 10, 10, 10, 10, 10, 10, 10 ] ;
 % params.D  = 1.5+2.5+2.5 %5.5%3.5
 
-%% 
+%% Get MRI, CT and Brainmask Anatomy Matrices
 X = orig.anatomy       ;
 X = X(1:end,1:end-1,1:end-2) ;
 
@@ -223,21 +223,20 @@ s_CT = 0:size(Y,3)-1; %
 % % 
 % % ct2t1
 
+%% Create XYZ Coordinates of the CT Scan
+[C_CT,R_CT,S_CT] = ndgrid(c_CT,r_CT,s_CT) ;
+CRS_CT = [C_CT(:),R_CT(:),S_CT(:)];
 
-
-% [C_CT,R_CT,S_CT] = ndgrid(c_CT,r_CT,s_CT) ;
-% CRS_CT = [C_CT(:),R_CT(:),S_CT(:)];
-% 
 % ras_CT = CT.vox2ras * [CRS_CT.';ones(1,size(CRS_CT,1))] ;
-% ras_CT = ras_CT(1:3,:).' ;
-% 
-% X_CT = reshape(ras_CT(:,1),size(C_CT)) ;
-% Y_CT = reshape(ras_CT(:,2),size(C_CT)) ;
-% Z_CT = reshape(ras_CT(:,3),size(C_CT)) ;
+ras_CT = CT.transform * [CRS_CT.'; ones(1, size(CRS_CT, 1))];
+ras_CT = ras_CT(1:3,:).' ;
+
+X_CT = reshape(ras_CT(:,1),size(C_CT)) ;
+Y_CT = reshape(ras_CT(:,2),size(C_CT)) ;
+Z_CT = reshape(ras_CT(:,3),size(C_CT)) ;
 
 
 %% Find electrodes
-
 figure
 subplot(2,1,1)
 histogram(Y(:))
