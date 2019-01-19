@@ -1,0 +1,104 @@
+import snakemake
+import os
+
+"""
+snakemake --dag | dot -Tpdf > dag_neuroimaging_pipeline_contactlocalization.pdf
+"""
+
+configfile: "../config/localconfig.yaml"
+snakemake.utils.validate(config, "../config/preformat_config.schema.yaml")
+
+# get the environment variable for freesurfer - for use in getting access to lut's
+HOME_DIR="../../"
+SCRIPTS_UTIL_DIR = "../../neuroimg/format/"
+ATLAS=['dk', 'destrieux']
+
+''' USER DEFINED DIRECTORIES TO STORE FINAL DATA IN ORGANIZED SUBFOLDERS '''
+COREGISTRATION_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
+                                         "{patient_id}",
+                                         "coregistration")
+PATIENT_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
+                                        "{patient_id}")
+STATS_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
+                                                "{patient_id}",
+                                                "stats")
+
+
+# depends on the T1 MRI reconstruction
+subworkflow reconstruction_workflow:
+    workdir:
+        "../"
+    snakefile:
+        "../Snakefile"
+    configfile:
+        "../config/localconfig.yaml"
+
+# First rule
+rule all:
+    input:
+        clustered_center_points_flirt = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
+                                                     '{patient_id}_native_flirt_elec_xyz.txt'),
+                                            patient_id = config['patients']),
+    shell:
+        "echo 'done'"
+
+
+rule compute_volume_lobe:
+    input:
+
+    output:
+
+    shell:
+
+
+rule compute_volume_region:
+    input:
+
+    output:
+
+    shell:
+
+
+"""
+"""
+rule copy_stats_files:
+    input:
+        lh_stats_file_destrieux = os.path.join(config['fs_outputdatadir'],
+                            "{patient_id}",
+                            "stats/lh.aparc.a2009s.stats"),
+        rh_stats_file_destrieux = os.path.join(config['fs_outputdatadir'],
+                            "{patient_id}",
+                            "stats/rh.aparc.a2009s.stats"),
+        lh_stats_file_dk = os.path.join(config['fs_outputdatadir'],
+                            "{patient_id}",
+                            "stats/lh.aparc.stats"),
+        rh_stats_file_dk = os.path.join(config['fs_outputdatadir'],
+                            "{patient_id}",
+                            "stats/rh.aparc.stats"),
+        wm_stats_file = os.path.join(config['fs_outputdatadir'],
+                            "{patient_id}",
+                            "stats/wmparc.stats"),
+        subcort_stats_file = os.path.join(config['fs_outputdatadir'],
+                            "{patient_id}",
+                            "stats/aseg.stats")
+    output:
+        lh_stats_file_destrieux = os.path.join(STATS_OUTPUT_DIR,
+                            "lh.aparc.a2009s.stats"),
+        rh_stats_file_destrieux = os.path.join(STATS_OUTPUT_DIR,
+                            "rh.aparc.a2009s.stats"),
+        lh_stats_file_dk = os.path.join(STATS_OUTPUT_DIR,
+                            "lh.aparc.stats"),
+        rh_stats_file_dk = os.path.join(STATS_OUTPUT_DIR,
+                            "rh.aparc.stats"),
+        wm_stats_file = os.path.join(STATS_OUTPUT_DIR,
+                            "wmparc.stats"),
+        subcort_stats_file = os.path.join(STATS_OUTPUT_DIR,
+                            "aseg.stats")
+    shell:
+        "echo 'RUNNING CLUSTERING ALGORITHM';"
+        "cp {params.lh_stats_file_destrieux} {output.lh_stats_file_destrieux};"
+        "cp {params.rh_stats_file_destrieux} {output.rh_stats_file_destrieux};"
+        "cp {params.lh_stats_file_dk} {output.lh_stats_file_dk};"
+        "cp {params.rh_stats_file_dk} {output.rh_stats_file_dk};"
+        "cp {params.wm_stats_file} {output.wm_stats_file};"
+        "cp {params.subcort_stats_file} {output.subcort_stats_file};"
