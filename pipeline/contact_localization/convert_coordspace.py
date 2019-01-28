@@ -19,6 +19,8 @@ def read_label_coords(elecfile):
     labels = []
     labelsxyz = []
 
+    print("Reading ", elecfile)
+
     with open(elecfile, 'r') as f:
         for _row in f:
             row = _row.split(" ")

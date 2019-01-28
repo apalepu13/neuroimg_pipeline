@@ -313,3 +313,4 @@ rule convert_to_nifti:
                                        "brainmask_native.nii.gz")
     shell:
         "mri_convert {input.brainmask_mgz} {output.brainmask_nifti};"
+
