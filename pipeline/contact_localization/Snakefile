@@ -146,7 +146,7 @@ rule convert_coords_mat_to_txt:
         clustered_center_points = os.path.join(COREGISTRATION_OUTPUT_DIR,
                                        '{patient_id}_elecxyz.txt'),
     shell:
-        "python -m convert_to_txt.py {input.clustered_center_points_mat} " \
+        "python -m convert_to_txt {input.clustered_center_points_mat} " \
                                     "{output.clustered_center_points};"
 
 rule convert_coords_to_conformed_space:
@@ -173,8 +173,8 @@ rule convert_coords_to_conformed_space:
     output:
         clustered_center_points_flirt = os.path.join(COREGISTRATION_OUTPUT_DIR,
                                                      '{patient_id}_native_flirt_elec_xyz.txt'),
-        conformed_center_points_flirt = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                                     '{patient_id}_conform_flirt_elec_xyz.txt'),
+        # conformed_center_points_flirt = os.path.join(COREGISTRATION_OUTPUT_DIR,
+        #                                              '{patient_id}_conform_flirt_elec_xyz.txt'),
     shell:
         "python -m convert_coordspace " \
                         "{input.CT_NIFTI_IMG} " \
@@ -183,9 +183,10 @@ rule convert_coords_to_conformed_space:
                         "{input.clustered_center_points} " \
                         "{output.clustered_center_points_flirt};"
 
-        "python -m conform_coordspace " \
-                        "{input.CONFORM_MRI_NIFTI_IMG} " \
-                        "{input.MRI_NIFTI_IMG} " \
-                        "{input.register_conformed_file} " \
-                        "{output.clustered_center_points_flirt} " \
-                        "{output.conformed_center_points_flirt};"
+        # runs additional transformation to map things into the conformed space of FS
+        # "python -m conform_coordspace " \
+        #                 "{input.CONFORM_MRI_NIFTI_IMG} " \
+        #                 "{input.MRI_NIFTI_IMG} " \
+        #                 "{input.register_conformed_file} " \
+        #                 "{output.clustered_center_points_flirt} " \
+        #                 "{output.conformed_center_points_flirt};"

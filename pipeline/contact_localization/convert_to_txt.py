@@ -1,7 +1,7 @@
 import argparse
-import subprocess
-import numpy as np
+
 import scipy.io
+
 
 def loadmat(filename):
     def _check_keys(dict):
@@ -24,29 +24,18 @@ def loadmat(filename):
     data = scipy.io.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
 
-def transform(coords, src_img, dest_img, transform_mat):
-    coords_str = " ".join([str(x) for x in coords])
 
-    # print(coords_str)
-    cp = subprocess.run("echo %s | img2imgcoord -mm -src %s -dest %s -xfm %s" \
-                            % (coords_str, src_img, dest_img, transform_mat),
-                        shell=True, stdout=subprocess.PIPE)
-
-    transformed_coords = cp.stdout.decode('ascii').strip().split('\n')[-1]
-    # print(transformed_coords)
-    return np.array([float(x) for x in transformed_coords.split(" ") if x])
-
-
-def read_label_coords(elecfilemat, elecfiletxt):
+def read_label_coords(elecfilemat):
     print("Reading ", elecfilemat)
 
     elecmat = loadmat(elecfilemat)
     elecxyz = elecmat['elecf']
 
-    electxt = { elecxyz['label'][i]: list(elecxyz['elecpos'][i])
-                for i in range(len(elecxyz['label']))}
+    electxt = {elecxyz['label'][i]: list(elecxyz['elecpos'][i])
+               for i in range(len(elecxyz['label']))}
 
     return electxt
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -63,8 +52,8 @@ if __name__ == '__main__':
 
     # write the output to a txt file
     with open(outputcoordsfile, 'w') as f:
-        for i, name in enumerate(electxt['label']):
+        for i, name in enumerate(electxt.keys()):
             f.write('%s %.6f %.6f %.6f\n' % (name,
-                                             electxt['elecpos'][i][0],
-                                             electxt['elecpos'][i][1],
-                                             electxt['elecpos'][i][2]))
+                                             electxt[name][0],
+                                             electxt[name][1],
+                                             electxt[name][2]))
