@@ -13,6 +13,10 @@ HOME_DIR="../../"
 SCRIPTS_UTIL_DIR = "../../neuroimg/format/"
 ATLAS=['dk', 'destrieux']
 
+# get the environment variable for freesurfer - for use in getting access to lut's
+FREESURFER_HOME = os.getenv("FREESURFER_HOME") or ''
+MRTRIX3_HOME = os.getenv("MRTRIX3_HOME") or ''
+
 ''' USER DEFINED DIRECTORIES TO STORE FINAL DATA IN ORGANIZED SUBFOLDERS '''
 COREGISTRATION_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
                                          "{patient_id}",
@@ -27,41 +31,43 @@ STATS_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
 # depends on the T1 MRI reconstruction
 subworkflow reconstruction_workflow:
     workdir:
-        "../"
+        "../reconstruction/"
     snakefile:
-        "../Snakefile"
+        "../reconstruction/Snakefile"
     configfile:
         "../config/localconfig.yaml"
 
 # First rule
 rule all:
     input:
-        clustered_center_points_flirt = expand(os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                                     '{patient_id}_native_flirt_elec_xyz.txt'),
-                                            patient_id = config['patients']),
+        volumestats_outputfilepath = os.path.join(STATS_OUTPUT_DIR, "mrtrix3_volume_stats.json"),
     shell:
         "echo 'done'"
 
 
-rule compute_volume_lobe:
-    input:
-
-    output:
-
-    shell:
+# rule compute_volume_lobe:
+#     input:
+#
+#     output:
+#
+#     shell:
 
 
 rule compute_volume_region:
     input:
-        lh_stats_file = os.path.join(),
-        rh_stats_file = os.path.join(),
-        subcort_stats_file = os.path.join(),
-        wm_stats_file = os.path.join(),
+        lh_stats_file_dk = os.path.join(STATS_OUTPUT_DIR,
+                            "lh.aparc.stats"),
+        rh_stats_file_dk = os.path.join(STATS_OUTPUT_DIR,
+                            "rh.aparc.stats"),
+        wm_stats_file = os.path.join(STATS_OUTPUT_DIR,
+                            "wmparc.stats"),
+        subcort_stats_file = os.path.join(STATS_OUTPUT_DIR,
+                            "aseg.stats")
     params:
-        fs_lut = os.path.join(),
-        mrtrix_lut = os.path.join(),
+        fs_lut = os.path.join(FREESURFER_HOME, "FreeSurferColorLUT.txt"),
+        mrtrix_lut = os.path.join(MRTRIX3_HOME, "share/mrtrix3/labelconvert/fs_default.txt"),
     output:
-        outputfilepath = os.path.join(),
+        outputfilepath = os.path.join(STATS_OUTPUT_DIR, "mrtrix3_volume_stats.json"),
     shell:
         "python -m run_volume_computation {input.lh_stats_file} " \
                                             "{input.rh_stats_file} " \
