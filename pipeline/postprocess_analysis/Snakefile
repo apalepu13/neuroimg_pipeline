@@ -53,11 +53,23 @@ rule compute_volume_lobe:
 
 rule compute_volume_region:
     input:
-
+        lh_stats_file = os.path.join(),
+        rh_stats_file = os.path.join(),
+        subcort_stats_file = os.path.join(),
+        wm_stats_file = os.path.join(),
+    params:
+        fs_lut = os.path.join(),
+        mrtrix_lut = os.path.join(),
     output:
-
+        outputfilepath = os.path.join(),
     shell:
-
+        "python -m run_volume_computation {input.lh_stats_file} " \
+                                            "{input.rh_stats_file} " \
+                                            "{input.subcort_stats_file} " \
+                                            "{input.wm_stats_file} " \
+                                            "{params.fs_lut} " \
+                                            "{params.mrtrix_lut} " \
+                                            "{output.outputfilepath};"
 
 """
 """
