@@ -25,7 +25,7 @@ def create_mrtrixlut_volumes(fslut, mrtrixlut, regionmapping, fsvolumedict):
         trg_lut_ind = regionmapping.source_to_target(src_lut_ind)
 
         # create mapping from lut target index to the volume
-        volumes[str(trg_lut_ind)] = fsvolumedict[name]
+        volumes[str(trg_lut_ind)] = int(fsvolumedict[name])
 
     return volumes
 
