@@ -422,10 +422,7 @@ rule convert_to_anatomical_space:
     params:
         patient_id = "{patient_id}",
 
-        norm_output_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
-                                "norm.mgz"),
-        aseg_output_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
-                                        "aseg.mgz"),
+
     output:
         brainmask_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
                                       "brainmask_native.mgz"),
@@ -444,6 +441,10 @@ rule convert_to_anatomical_space:
         #                        "lh.native.aparc.annot"),
         # rhlabel = os.path.join(NATIVESPACE_OUTPUT_DIR,
         #                        "rh.native.aparc.annot"),
+        norm_output_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
+                                        "norm.mgz"),
+        aseg_output_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
+                                        "aseg.mgz"),
 
     shell:
         # convert surfaces to the native space
@@ -456,11 +457,11 @@ rule convert_to_anatomical_space:
         "mri_vol2vol --mov {input.brainmask_file} --targ {input.rawavg_file} \
                 --regheader --o {output.brainmask_file} --no-save-reg;"
         "mri_vol2vol --mov {input.norm_output_file} --targ {input.rawavg_file} \
-                        --regheader --o {params.norm_output_file} --no-save-reg;"
+                        --regheader --o {output.norm_output_file} --no-save-reg;"
 
         # convert label volumes -> native space
         "mri_label2vol --seg {input.aseg_output_file} --temp {input.rawavg_file} \
-                        --o {params.aseg_output_file} --regheader {input.aseg_output_file};"
+                        --o {output.aseg_output_file} --regheader {input.aseg_output_file};"
         "mri_label2vol --seg {input.wm_output_file} --temp {input.rawavg_file} \
                                 --o {output.wm_output_file} --regheader {input.wm_output_file};"
         "mri_label2vol --seg {input.aparc_atlas_aseg_file} --temp {input.rawavg_file} \
