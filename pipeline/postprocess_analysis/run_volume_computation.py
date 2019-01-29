@@ -86,5 +86,5 @@ if __name__ == '__main__':
 
     print(mrtrixvolumedict)
     # save the mrtrixvolumedictionary in mm^3
-    with open(outputvolumefile, 'w') as fp:
-        json.dump(mrtrixvolumedict, fp)
+    with open(outputvolumefile, 'w', encoding="utf8") as fp:
+        json.dump(mrtrixvolumedict, fp, indent=4, sort_keys=True, separators=(',', ': '), ensure_ascii=False)
