@@ -22,7 +22,7 @@ class FSCorticalStats():
         return self.table[self.table.dtype.names[2]]
 
     @property
-    def grayvols(self):
+    def volumes(self):
         return self.table[self.table.dtype.names[3]]
 
 class FSSegmentationStats():

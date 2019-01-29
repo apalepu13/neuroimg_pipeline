@@ -40,7 +40,8 @@ subworkflow reconstruction_workflow:
 # First rule
 rule all:
     input:
-        volumestats_outputfilepath = os.path.join(STATS_OUTPUT_DIR, "mrtrix3_volume_stats.json"),
+        volumestats_outputfilepath = expand(os.path.join(STATS_OUTPUT_DIR, "mrtrix3_volume_stats.json"),
+                                            patient_id=config['patients']),
     shell:
         "echo 'done'"
 
@@ -69,8 +70,8 @@ rule compute_volume_region:
     output:
         outputfilepath = os.path.join(STATS_OUTPUT_DIR, "mrtrix3_volume_stats.json"),
     shell:
-        "python -m run_volume_computation {input.lh_stats_file} " \
-                                            "{input.rh_stats_file} " \
+        "python -m run_volume_computation {input.lh_stats_file_dk} " \
+                                            "{input.rh_stats_file_dk} " \
                                             "{input.subcort_stats_file} " \
                                             "{input.wm_stats_file} " \
                                             "{params.fs_lut} " \
@@ -114,9 +115,9 @@ rule copy_stats_files:
                             "aseg.stats")
     shell:
         "echo 'RUNNING CLUSTERING ALGORITHM';"
-        "cp {params.lh_stats_file_destrieux} {output.lh_stats_file_destrieux};"
-        "cp {params.rh_stats_file_destrieux} {output.rh_stats_file_destrieux};"
-        "cp {params.lh_stats_file_dk} {output.lh_stats_file_dk};"
-        "cp {params.rh_stats_file_dk} {output.rh_stats_file_dk};"
-        "cp {params.wm_stats_file} {output.wm_stats_file};"
-        "cp {params.subcort_stats_file} {output.subcort_stats_file};"
+        "cp {input.lh_stats_file_destrieux} {output.lh_stats_file_destrieux};"
+        "cp {input.rh_stats_file_destrieux} {output.rh_stats_file_destrieux};"
+        "cp {input.lh_stats_file_dk} {output.lh_stats_file_dk};"
+        "cp {input.rh_stats_file_dk} {output.rh_stats_file_dk};"
+        "cp {input.wm_stats_file} {output.wm_stats_file};"
+        "cp {input.subcort_stats_file} {output.subcort_stats_file};"

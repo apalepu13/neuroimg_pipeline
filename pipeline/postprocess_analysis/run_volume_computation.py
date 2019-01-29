@@ -16,11 +16,16 @@ def create_mrtrixlut_volumes(fslut, mrtrixlut, regionmapping, fsvolumedict):
         src_lut_ind = [fslut.inds[ind] for ind, structname in enumerate(fslut.names) \
                        if name in structname.lower()]
 
+        if len(src_lut_ind) == 0:
+            src_lut_ind = None
+        else:
+            src_lut_ind = src_lut_ind[0]
+
         # get corresponding index in Target LUT File
         trg_lut_ind = regionmapping.source_to_target(src_lut_ind)
 
         # create mapping from lut target index to the volume
-        volumes[trg_lut_ind] = fsvolumedict[name]
+        volumes[str(trg_lut_ind)] = fsvolumedict[name]
 
     return volumes
 
@@ -74,11 +79,12 @@ if __name__ == '__main__':
     # initialize LUT file objects
     fslut = ColorLut(fslutfile)
     mrtlut = ColorLut(mrtrixlutfile)
-    regionmapping = RegionIndexMapping(fslut, mrtlut)
+    regionmapping = RegionIndexMapping(fslutfile, mrtrixlutfile)
 
     # create volume dictionary for mrtrix labels
     mrtrixvolumedict = create_mrtrixlut_volumes(fslut, mrtlut, regionmapping, fsvolumedict)
 
+    print(mrtrixvolumedict)
     # save the mrtrixvolumedictionary in mm^3
     with open(outputvolumefile, 'w') as fp:
         json.dump(mrtrixvolumedict, fp)
