@@ -18,12 +18,12 @@ RESULTS_DIR = '/home/adam2392/hdd/data/neuroimaging/freesurfer_output/outputfile
 RECORD_DATADIR = '/home/adam2392/hdd/data/rawdata';
 % RECORD_DATADIR = '/Users/adam2392/Downloads/tngpipeline/';
 
+% subj id to analyze
+subjID = 'la03';
+
 % filepath to your raw data (the header of the edf file has the channel
 % labels and stuff)
 rawdatafilepath = fullfile(RECORD_DATADIR, 'cleveland/', subjID, '/seeg/edf/', strcat(subjID, '_ictal.edf'))
-
-% subj id to analyze
-subjID = 'la03';
 
 % results directory
 SUBJDIR = fullfile(RESULTS_DIR, subjID);
@@ -59,4 +59,4 @@ elecf = ft_electrodeplacement(cfg, ct_img);
 elecf
 
 % save it into .mat file - name it accordingly
-save(elec_coords_filepath, 'elecf');
+% save(elec_coords_filepath, 'elecf');

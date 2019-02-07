@@ -170,11 +170,11 @@ rule reconstruction:
         outsuccess_file=os.path.join(config['fs_outputdatadir'],
                                 "{patient_id}_recon_success.txt")
     shell:
-        # "export SUBJECTS_DIR={params.SUBJECTS_DIR}; \
-        #     SUBJECTS_DIR={params.SUBJECTS_DIR};"
-        # "recon-all -i {input.MRI_NIFTI_IMG} \
-        #     -subjid {params.patient} -all \
-        #     -parallel -openmp 4;"
+        "export SUBJECTS_DIR={params.SUBJECTS_DIR}; \
+            SUBJECTS_DIR={params.SUBJECTS_DIR};"
+        "recon-all -i {input.MRI_NIFTI_IMG} \
+            -subjid {params.patient} -all \
+            -parallel -openmp 4;"
         "touch {output.outsuccess_file}"
 
 """
