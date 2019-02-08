@@ -4,11 +4,10 @@ import sys
 import numpy as np
 import nibabel as nb
 
-sys.path.append('../ndreg/')
+sys.path.append('../../ndreg/')
 
 import ndreg
-from ndreg import preprocessor, util
-
+from ndreg.ndreg import preprocessor, util
 
 def main(mri_nifti_img, ct_nifti_img, outdir):
     # gets the image spacing in mm for mri
@@ -54,8 +53,8 @@ def main(mri_nifti_img, ct_nifti_img, outdir):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('ct_nifti_img', help="The CT image volume in its original space.")
     parser.add_argument('mri_nifti_img', help="Brain MRI image space.")
+    parser.add_argument('ct_nifti_img', help="The CT image volume in its original space.")
     parser.add_argument('mapping_transformation_file', help="The mapping transformation file.")
     parser.add_argument('ct_to_mri_nifti_img', help="The output datafile for electrodes mapped to correct coords.")
     parser.add_argument('outdir', help="Output data directory to save results.")

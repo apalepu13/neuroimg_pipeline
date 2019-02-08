@@ -174,19 +174,54 @@ Rule for running lddmm algorithm script using tensorflow
 """
 rule lddmm_registration_ct_to_pre:
     input:
-        PREMRI_NIFTI_IMG_MGZ = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                            "preT1_normalize.mgz"),
-        POSTMRI_NIFTI_IMG_MGZ = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                             "CT_normalize.mgz"),
+        PREMRI_NIFTI_IMG = os.path.join(PATIENT_OUTPUT_DIR,
+                                            "T1.nii.gz"),
+        CT_NIFTI_IMG = os.path.join(PATIENT_OUTPUT_DIR,
+                                             "CT.nii.gz"),
     output:
         # mapping matrix from CT -> MRI
         LDDMM_MAPPED_FILE=os.path.join(COREGISTRATION_OUTPUT_DIR,
                                         "ldmm_ct-to-pre-t1_omat.txt"),
         # mapped image from CT -> MRI
         output_registration_image = os.path.join(COREGISTRATION_OUTPUT_DIR,
-                                        "CT_in_pre_T1_lddmm.mgz"),
+                                        "CT_in_pre_T1_lddmm.nii.gz"),
     shell:
-        "echo 'need to implement.';"
+        "python run_lddmm_coregister.py " \
+                "{input.PREMRI_NIFTI_IMG} " \
+                "{input.CT_NIFTI_IMG} " \
+                "{output.output_registration_image};"
+
+"""
+Rule for running NDREG algorithm script using tensorflow
+"""
+rule ndreg_registration_ct_to_pre:
+    input:
+        PREMRI_NIFTI_IMG = os.path.join(PATIENT_OUTPUT_DIR,
+                                            "T1.nii.gz"),
+        CT_NIFTI_IMG = os.path.join(PATIENT_OUTPUT_DIR,
+                                             "CT.nii.gz"),
+    params:
+        outputdir = os.path.join(COREGISTRATION_OUTPUT_DIR),
+
+    output:
+        # mapping matrix from CT -> MRI
+        LDDMM_MAPPED_FILE=os.path.join(COREGISTRATION_OUTPUT_DIR,
+                                        "ldmm_ct-to-pre-t1_omat.txt"),
+        # mapped image from CT -> MRI
+        output_registration_image = os.path.join(COREGISTRATION_OUTPUT_DIR,
+                                        "CT_in_pre_T1_lddmm.nii.gz"),
+    shell:
+        "python run_ndreg.py " \
+                "{input.PREMRI_NIFTI_IMG} " \
+                "{input.CT_NIFTI_IMG} " \
+                "{output.mapping_file} " \
+                "{output.output_registration_image} " \
+                "{params.outputdir};"
+
+
+parser.add_argument('mapping_transformation_file', help="The mapping transformation file.")
+parser.add_argument('ct_to_mri_nifti_img', help="The output datafile for electrodes mapped to correct coords.")
+parser.add_argument('outdir', help="Output data directory to save results.")
 
 rule convert_coordinate_system:
     input:
