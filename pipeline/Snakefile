@@ -102,6 +102,7 @@ TVB_OUTPUT_DIR = os.path.join(config['finaloutput_datadir'],
                                                 "{patient_id}",
                                                 "tvb")
 
+# CONFORMSPACE_OUTPUT_DIR = os.path.join(TVB_OUTPUT_DIR)
 NATIVESPACE_OUTPUT_DIR = os.path.join(PATIENT_OUTPUT_DIR,
                                       "nativespace-transform")
 
@@ -232,7 +233,6 @@ rule convert_to_mgz:
     shell:
         "mrconvert {input.PREMRI_NIFTI_IMG_ORIG} {output.PREMRI_NIFTI_IMG_MGZ};"
         "mrconvert {input.CT_NIFTI_IMG_ORIG} {output.CT_NIFTI_IMG_MGZ};"
-
 
 rule normalize_image:
     input:
@@ -421,8 +421,7 @@ rule convert_to_anatomical_space:
                                                        "rh.aparc.annot")),
     params:
         patient_id = "{patient_id}",
-
-
+        subj_dir = os.path.join(config['fs_outputdatadir']),
     output:
         brainmask_file = os.path.join(NATIVESPACE_OUTPUT_DIR,
                                       "brainmask_native.mgz"),
@@ -447,6 +446,8 @@ rule convert_to_anatomical_space:
                                         "aseg.mgz"),
 
     shell:
+        "export SUBJECTS_DIR={params.subj_dir}; \
+                SUBJECTS_DIR={params.subj_dir};"
         # convert surfaces to the native space
         "mri_surf2surf --sval-xyz pial --reg {input.registration_native_file}  \
                             --tval {output.lhpial} --tval-xyz {input.rawavg_file} --hemi lh --s {params.patient_id};"
